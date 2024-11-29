@@ -27,8 +27,8 @@ export class User{
                             this.ws.close()
                         }
                         this.roomId = roomId
-                        this.playerX = 40,
-                        this.playerY = 50,
+                        this.playerX = 390,
+                        this.playerY = 1260,
                         RoomManager.getInstance().addUser(this,roomId)
                         RoomManager.getInstance().broadcastMessage(this,JSON.stringify({
                            type:EventTypes.Server.USER_JOINED,
@@ -41,27 +41,31 @@ export class User{
                         }),roomId)
                         this.sendMessage(JSON.stringify({
                             type: EventTypes.Server.SPACE_JOINED,
-                            payload:Array.from(RoomManager.getInstance().rooms?.get(roomId)||[]).filter((e)=>e!=this).map((e)=>{return {id:e.id,x:e.playerX,y:e.playerY}})
+                            payload:{userId:this.id,users:Array.from(RoomManager.getInstance().rooms?.get(roomId)||[]).filter((e)=>e.id!=this.id).map((e)=>{return {id:e.id,x:e.playerX,y:e.playerY}})}
                         }))
                         break;
                     
                     case "MOVE":
-                        const {x,y} = payload
-                        if (typeof x !== 'number' || typeof y !== 'number') {
+                        const {xPos,velocityX,velocityY,yPos} = payload
+                        if (typeof xPos !== 'number' || typeof yPos !== 'number') {
                             this.sendMessage(JSON.stringify({
                                 type: "error",
                                 payload: { message: "Invalid move coordinates" }
                             }));
                             return;
                         }
-                        this.playerX = x;
-                        this.playerY = y;
+
+                        this.playerX = xPos
+                        this.playerY! = yPos;
+                        console.log("Updated",this.playerX,this.playerY)
                         RoomManager.getInstance().broadcastMessage(this,JSON.stringify({
                             type:EventTypes.Server.MOVEMENT,
                             payload:{
                                 userId:this.id,
-                                x,
-                                y
+                                x:velocityX,
+                                y:velocityY,
+                                xPos:this.playerX,
+                                yPos:this.playerX
                             }
                         }),this.roomId)
                         break;
