@@ -15,3 +15,10 @@ export const EventTypes = {
 export type UserEvents = typeof EventTypes.User[keyof typeof EventTypes.User];
 export type ServerEvents = typeof EventTypes.Server[keyof typeof EventTypes.Server];
 
+export type User ={
+    id: string;
+    userName:string,
+    email:string,
+    avatarId:string | undefined,
+    createdAt:string
+}

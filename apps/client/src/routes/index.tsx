@@ -5,11 +5,13 @@ import { ProtectedRoute } from "./protectedRoute";
 import App from "../App";
 import ErrorBoundary from "@/components/common/error";
 
+
 const LandingPage = lazy((): any => import("../pages/home"));
 const LoginPage = lazy((): any => import("../pages/auth/signIn"));
 const Dashboard = lazy((): any => import("../pages/profile/userProfile"));
 const NotFound = lazy((): any => import("@/components/common/notfound"));
 const CreateRoom = lazy((): any => import("../pages/room/createRoom"));
+const SignUp = lazy(():any=>import ("../pages/auth/signUp"))
 const Room = lazy((): any => import("../pages/room"));
 
 
@@ -64,6 +66,10 @@ const router = createBrowserRouter([
       {
         path: "login",
         element: <LoginPage />,
+      },
+      {
+        path: "signup",
+        element: <SignUp />,
       },
 
       {
