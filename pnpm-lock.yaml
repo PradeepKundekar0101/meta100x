@@ -23,12 +23,18 @@ importers:
       '@repo/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@types/cors':
         specifier: ^2.8.17
         version: 2.8.17
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.0
+      '@types/jsonwebtoken':
+        specifier: ^9.0.7
+        version: 9.0.7
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -123,11 +129,10 @@ importers:
         version: 6.2.1(typescript@5.7.2)
 
   packages/db:
-    dependencies:
-      '@prisma/client':
-        specifier: 6.0.0
-        version: 6.0.0(prisma@6.0.0)
     devDependencies:
+      '@prisma/client':
+        specifier: ^6.0.0
+        version: 6.0.0(prisma@6.0.0)
       prisma:
         specifier: ^6.0.0
         version: 6.0.0
@@ -176,6 +181,9 @@ importers:
       typescript:
         specifier: latest
         version: 5.7.2
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
 
   packages/typescript-config: {}
 
@@ -644,6 +652,9 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
+  '@types/jsonwebtoken@9.0.7':
+    resolution: {integrity: sha512-ugo316mmTYBl2g81zDFnZ7cfxlut3o+/EQdaP7J8QN2kY6lJ22hmQYCK5EHcJHbrW+dkCGSCPgbG8JtYj6qSrg==}
 
   '@types/mime@1.3.5':
     resolution: {integrity: sha512-/pyBZWSLD2n0dcHE3hq8s8ZvcETHtEuF+3E7XVt0Ig2nvsVQXdghHVcEkIWjy9A0wKfTn97a/PSDYohKIlnP/w==}
@@ -2429,6 +2440,10 @@ snapshots:
   '@types/http-errors@2.0.4': {}
 
   '@types/json-schema@7.0.15': {}
+
+  '@types/jsonwebtoken@9.0.7':
+    dependencies:
+      '@types/node': 20.17.6
 
   '@types/mime@1.3.5': {}
 

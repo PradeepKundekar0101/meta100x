@@ -7,6 +7,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "typescript": "latest"
+    "typescript": "latest",
+    "zod": "^3.23.8"
   }
 }

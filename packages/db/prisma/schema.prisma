@@ -11,7 +11,7 @@ model User {
   id        String   @id @default(uuid())
   userName  String
   email     String
-  avatarId  String
+  avatarId  String?
   password  String
   createdAt DateTime @default(now())
   Room      Room[]
@@ -20,8 +20,9 @@ model User {
 model Room {
   id        String   @id @default(uuid())
   roomName  String
-  createrId String
+  roomCode  String
+  creatorId String
   isActive  Boolean  @default(true)
-  creater   User     @relation(references: [id], fields: [createrId])
+  creator   User     @relation(references: [id], fields: [creatorId])
   createdAt DateTime @default(now())
 }
