@@ -52,9 +52,9 @@ export default class TestScene extends Scene {
             color: "#ffffff",
             backgroundColor: "#000000",
             padding: { x: 4, y: 2 },
-          }).setOrigin(0.5);
+          }).setOrigin(1.5);
           this.labels[payload.userId]= label
-          console.log(this.labels)
+
           break;
         case "MOVEMENT":
           const { userId, x: velocityX, y: velocityY, xPos: targetX, yPos: targetY } = payload;
@@ -68,10 +68,12 @@ export default class TestScene extends Scene {
             );
             const duration = (dis / 100) * 1000;
             let animationKey = "";
-            if (velocityX < 0) animationKey = "misa-left-walk";
-            else if (velocityX > 0) animationKey = "misa-right-walk";
-            else if (velocityY < 0) animationKey = "misa-back-walk";
-            else if (velocityY > 0) animationKey = "misa-front-walk";
+            const texturekey = player.texture.key;
+            console.log("Movement ",texturekey)
+            if (velocityX < 0) animationKey = `${texturekey}-left`;
+            else if (velocityX > 0) animationKey = `${texturekey}-right`;
+            else if (velocityY < 0) animationKey = `${texturekey}-back`;
+            else if (velocityY > 0) animationKey = `${texturekey}-front`;
 
             if (!player.anims.isPlaying) {
               player.anims.play(animationKey);
@@ -103,15 +105,38 @@ export default class TestScene extends Scene {
     map.createLayer("Above Player", tileset!, 0, 0);
 
     this.player = this.physics.add
-      .sprite(390, 1260, "atlas", "misa-front");
+      .sprite(390, 1260, "snowman", "snowman000");
+     
 
     this.physics.add.collider(this.player, this.worldLayer!);
 
     const anims = this.anims;
     anims.create({
-      key: "misa-left-walk",
-      frames: anims.generateFrameNames("atlas", {
-        prefix: "misa-left-walk.",
+      key: "snowman-left",
+      frames: anims.generateFrameNames("snowman", {
+        prefix: "left",
+        // start: 0,
+        end: 3,
+        zeroPad: 3,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    anims.create({
+      key: "snowman-right",
+      frames: anims.generateFrameNames("snowman", {
+        prefix: "right",
+        // start: 0,
+        end: 3,
+        zeroPad: 3,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    anims.create({
+      key: "snowman-front",
+      frames: anims.generateFrameNames("snowman", {
+        prefix: "front",
         start: 0,
         end: 3,
         zeroPad: 3,
@@ -120,9 +145,9 @@ export default class TestScene extends Scene {
       repeat: -1,
     });
     anims.create({
-      key: "misa-right-walk",
-      frames: anims.generateFrameNames("atlas", {
-        prefix: "misa-right-walk.",
+      key: "snowman-back",
+      frames: anims.generateFrameNames("snowman", {
+        prefix: "back",
         start: 0,
         end: 3,
         zeroPad: 3,
@@ -130,11 +155,12 @@ export default class TestScene extends Scene {
       frameRate: 10,
       repeat: -1,
     });
+
     anims.create({
-      key: "misa-front-walk",
-      frames: anims.generateFrameNames("atlas", {
-        prefix: "misa-front-walk.",
-        start: 0,
+      key: "pajji-left",
+      frames: anims.generateFrameNames("pajji", {
+        prefix: "left",
+        // start: 0,
         end: 3,
         zeroPad: 3,
       }),
@@ -142,10 +168,32 @@ export default class TestScene extends Scene {
       repeat: -1,
     });
     anims.create({
-      key: "misa-back-walk",
-      frames: anims.generateFrameNames("atlas", {
-        prefix: "misa-back-walk.",
-        start: 0,
+      key: "pajji-right",
+      frames: anims.generateFrameNames("pajji", {
+        prefix: "right",
+        // start: 0,
+        end: 3,
+        zeroPad: 3,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    anims.create({
+      key: "pajji-front",
+      frames: anims.generateFrameNames("pajji", {
+        prefix: "front",
+        // start: 0,
+        end: 3,
+        zeroPad: 3,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    anims.create({
+      key: "pajji-back",
+      frames: anims.generateFrameNames("pajji", {
+        prefix: "back",
+        // start: 0,
         end: 3,
         zeroPad: 3,
       }),
@@ -164,24 +212,31 @@ export default class TestScene extends Scene {
     let velocityX = 0;
     let velocityY = 0;
     let animationKey = "";
-
     if (cursors!.left.isDown) {
+      const texturekey = this.player.texture.key
+      console.log("Movement ",texturekey)
       velocityX = -100;
-      animationKey = "misa-left-walk";
+      animationKey = `${texturekey}-left`;
       moving = true;
     } else if (cursors!.right.isDown) {
+      const texturekey = this.player.texture.key
+      console.log("Movement ",texturekey)
       velocityX = 100;
-      animationKey = "misa-right-walk";
+      animationKey = `${texturekey}-right`;
       moving = true;
     }
-
+    
     if (cursors!.up.isDown) {
+      const texturekey = this.player.texture.key
+      console.log("Movement ",texturekey)
       velocityY = -100;
-      animationKey = "misa-back-walk";
+      animationKey = `${texturekey}-back`;
       moving = true;
     } else if (cursors!.down.isDown) {
+      const texturekey = this.player.texture.key
+      console.log("Movement ",texturekey)
       velocityY = 100;
-      animationKey = "misa-front-walk";
+      animationKey = `${texturekey}-front`;
       moving = true;
     }
 
@@ -215,7 +270,7 @@ export default class TestScene extends Scene {
     for (const id in this.players) {
       const player = this.players[id];
       const label = this.labels[id];
-      console.log(label)
+      // console.log(label)
       if (player && label) {
         label.setPosition(player.x, player.y - 20);
       }
@@ -223,7 +278,7 @@ export default class TestScene extends Scene {
   }
 
   addPlayer(playerId: string, x: number, y: number) {
-    const newPlayer = this.physics.add.sprite(x, y, "atlas");
+    const newPlayer = this.physics.add.sprite(x, y, "pajji");
     this.players[playerId] = newPlayer;
     // this.physics.add.collider(this.player,newPlayer)
     // Array.from(Object(this.players)).forEach((player:any)=>{
