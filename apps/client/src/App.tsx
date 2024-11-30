@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import Preloader from "./scenes/Preloader";
 import GardenScene from "./scenes/Scene";
+import { Outlet } from "react-router-dom";
 function App() {
   useEffect(() => {
     async function initPhaser() {
@@ -32,8 +33,9 @@ function App() {
 
   return (
     <>
-      <button>Add</button>
-      <div id="game-content" key={"game-content"}></div>
+    <Outlet/>
+      {/* <button>Add</button>
+      <div id="game-content" key={"game-content"}></div> */}
     </>
   );
 }
