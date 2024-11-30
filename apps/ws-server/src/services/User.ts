@@ -65,7 +65,7 @@ export class User{
                                 x:velocityX,
                                 y:velocityY,
                                 xPos:this.playerX,
-                                yPos:this.playerX
+                                yPos:this.playerY
                             }
                         }),this.roomId)
                         break;
