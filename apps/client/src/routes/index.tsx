@@ -14,7 +14,7 @@ const NotFound = lazy((): any => import("@/components/common/notfound"));
 const CreateRoom = lazy((): any => import("../pages/room/createRoom"));
 const SignUp = lazy(():any=>import ("../pages/auth/signUp"))
 const Room = lazy((): any => import("../pages/room"));
-
+const MyRooms = lazy(()=>import("../pages/room/myRooms"))
 
 const router = createBrowserRouter([
   {
@@ -58,7 +58,19 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "room/:roomId",
+        path: "spaces",
+        element: (
+          <Suspense fallback={<Loader />}>
+            <RootLayout>
+            <ProtectedRoute>
+              <MyRooms />
+            </ProtectedRoute>
+            </RootLayout>
+          </Suspense>
+        ),
+      },
+      {
+        path: "space/:roomCode",
         element: (
           <Suspense fallback={<Loader />}>
             <ProtectedRoute>

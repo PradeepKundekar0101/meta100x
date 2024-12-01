@@ -14,6 +14,7 @@ CREATE TABLE "User" (
 CREATE TABLE "Room" (
     "id" TEXT NOT NULL,
     "roomName" TEXT NOT NULL,
+    "mapId" TEXT NOT NULL DEFAULT '',
     "roomCode" TEXT NOT NULL,
     "creatorId" TEXT NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,

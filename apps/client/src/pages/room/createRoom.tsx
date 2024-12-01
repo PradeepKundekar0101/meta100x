@@ -19,6 +19,7 @@ import useAxios from "@/hooks/use-axios";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check, Copy } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CreateRoom = () => {
   const [roomName, setRoomName] = useState("");
@@ -29,7 +30,7 @@ const CreateRoom = () => {
   const [selectedAvatar, setSelectedAvatar] = useState<string | undefined>(user?.avatarId);
   const [showDialog, setShowDialog] = useState(false);
   const [copied, setCopied] = useState(false);
-
+  const navigate = useNavigate()
   const mutation = useMutation({
     mutationKey: ["createroom"],
     mutationFn: async () => {
@@ -111,7 +112,7 @@ const CreateRoom = () => {
               </div>
             </div>
             
-            <Button className="w-full" size="lg">
+            <Button onClick={()=>{navigate("/space/"+roomCode)}} className="w-full" size="lg">
               Join Room
             </Button>
           </div>

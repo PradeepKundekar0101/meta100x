@@ -20,6 +20,7 @@ model User {
 model Room {
   id        String   @id @default(uuid())
   roomName  String
+  mapId     String   @default("")
   roomCode  String
   creatorId String
   isActive  Boolean  @default(true)

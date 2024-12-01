@@ -10,7 +10,8 @@ export const signInSchema = z.object({
 })
 export const createRoom = z.object({
     roomName: z.string().min(3,"Room name min 3 chars").max(32,"Max chars 32"),
-    creatorId: z.string()
+    creatorId: z.string(),
+    mapId: z.string()
 })
 export const updateRoom = z.object({
     roomName: z.string().min(3, "Room name must be at least 3 characters").max(32, "Room name cannot exceed 32 characters").optional(),
