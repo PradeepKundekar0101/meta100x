@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
 import useAxios from "@/hooks/use-axios";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignIn = () => {
+  const navigate = useNavigate()
   const {
     formState: { errors },
     register,
@@ -76,6 +77,9 @@ const SignIn = () => {
         <div>
           <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
             {loginMutation.isPending ? "Logging in..." : "Login"}
+          </Button>
+          <Button onClick={()=>{navigate("/")}} type="button" className=" w-full mt-2" variant={"outline"} >
+            <Link to={"/"}>Cancel</Link>
           </Button>
         </div>
         <Link to={"/signup"} className=" text-blue-700">Don't have an account?</Link>

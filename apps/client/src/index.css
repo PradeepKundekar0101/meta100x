@@ -64,3 +64,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+.hero{
+  background-image: linear-gradient(0deg,#0009,#0009), url("assets/hero.jpg");
+  background-size: "cover";
+}

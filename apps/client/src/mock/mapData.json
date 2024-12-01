@@ -1,0 +1,21 @@
+[
+    {
+        "mapId":"garden",
+        "thumbnail":"garden.png",
+        "title":"Garden",
+        "description":"Garden hai aur kuch nahi, aao aaram karo"
+    },
+    {
+        "mapId":"garden1",
+        "thumbnail":"garden.png",
+        "title":"Garden",
+        "description":"Garden hai aur kuch nahi, aao aaram karo"
+    },
+    {
+        "mapId":"garden2",
+        "thumbnail":"garden.png",
+        "title":"Garden",
+        "description":"Garden hai aur kuch nahi, aao aaram karo"
+    }
+    
+]

@@ -4,6 +4,7 @@ import Loader from "@/components/ui/loader";
 import { ProtectedRoute } from "./protectedRoute";
 import App from "../App";
 import ErrorBoundary from "@/components/common/error";
+import RootLayout from "@/layouts/rootLayout";
 
 
 const LandingPage = lazy((): any => import("../pages/home"));
@@ -28,7 +29,9 @@ const router = createBrowserRouter([
         path: "",
         element: (
           <Suspense fallback={<Loader />}>
+            <RootLayout>
             <LandingPage />
+            </RootLayout>
           </Suspense>
         ),
       },
@@ -46,9 +49,11 @@ const router = createBrowserRouter([
         path: "createroom",
         element: (
           <Suspense fallback={<Loader />}>
+            <RootLayout>
             <ProtectedRoute>
               <CreateRoom />
             </ProtectedRoute>
+            </RootLayout>
           </Suspense>
         ),
       },

@@ -1,0 +1,12 @@
+[
+    {
+        "name":"Sardar",
+        "thumbnail":"avatar_thumbnail/pajji.png",
+        "id":"pajji"
+    },
+    {
+        "name":"Snowman",
+        "thumbnail":"avatar_thumbnail/snow.png",
+        "id":"snowman"
+    }
+]
