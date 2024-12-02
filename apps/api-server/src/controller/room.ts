@@ -68,7 +68,10 @@ export const getRoomById = catchAsync(async (req: Request, res: Response) => {
 export const getRoomByCode = catchAsync(async (req: Request, res: Response) => {
     const { roomCode } = req.params;
     const room = await prismaClient.room.findFirst({
-        where: { roomCode },
+        where: { roomCode },include:{creator:{select:{
+            userName:true,
+            email:true
+        }}}
     });
     if (!room) {
         res.status(404).json({

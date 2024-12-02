@@ -1,23 +1,28 @@
+
 import { Scene } from "phaser";
+
+const avatarId = localStorage.getItem("avatarId") || "pajji"
+const roomId = localStorage.getItem("roomId") || "default"
+const token = localStorage.getItem("token") || "token"
 
 export default class TestScene extends Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private userId: string | undefined;
   private worldLayer: Phaser.Tilemaps.TilemapLayer | undefined | null;
-
   private players: Record<string, Phaser.Types.Physics.Arcade.SpriteWithDynamicBody>;
-  private labels: Record<string, Phaser.GameObjects.Text>; // For player labels
+  private labels: Record<string, Phaser.GameObjects.Text>; 
   private socket: WebSocket | null;
-
+  
   constructor() {
     super("garden");
     this.players = {};
+
     this.labels = {};
     this.socket = null;
   }
 
   preload() {}
-
+  
   create() {
     this.socket = new WebSocket("ws://localhost:8000");
     this.socket.addEventListener("open", () => {
@@ -26,7 +31,8 @@ export default class TestScene extends Scene {
         JSON.stringify({
           type: "JOIN_SPACE",
           payload: {
-            roomId: "room",
+            roomId,
+            token
           },
         })
       );
@@ -36,15 +42,17 @@ export default class TestScene extends Scene {
       const { type, payload } = JSON.parse(message.data);
       switch (type) {
         case "USER_JOINED":
-          const { id, x, y } = payload;
-          this.addPlayer(id, x, y);
+          const { id, x, y,userName,avatarId } = payload;
+          this.addPlayer(id, x, y,userName,avatarId);
           break;
+
         case "SPACE_JOINED":
+          console.log("first")
           this.userId = payload.userId;
           if (Array.isArray(payload.users)) {
             payload.users.forEach((e: any) => {
-              const { id, x, y } = e;
-              this.addPlayer(id, x, y);
+              const { id, x, y,userName,avatarId} = e;
+              this.addPlayer(id, x, y,userName,avatarId);
             });
           }
           const label = this.add.text(390, 1260, `YOU`, {
@@ -53,6 +61,8 @@ export default class TestScene extends Scene {
             backgroundColor: "#000000",
             padding: { x: 4, y: 2 },
           }).setOrigin(1.5);
+          console.log("Payload userId")
+          console.log(payload.userId)
           this.labels[payload.userId]= label
 
           break;
@@ -91,6 +101,24 @@ export default class TestScene extends Scene {
             });
           }
           break;
+          case "USER_LEFT":
+            const { id:userIdToDestroy, userName:userNameLeft } = payload;
+          
+            const playerToRemove = this.players[userIdToDestroy];
+            if (playerToRemove) {
+              playerToRemove.destroy(); 
+              delete this.players[userIdToDestroy];
+            }
+
+            const labelToRemove = this.labels[userIdToDestroy];
+            if (labelToRemove) {
+              labelToRemove.destroy(); 
+              delete this.labels[userIdToDestroy]; 
+            }
+          
+            console.log(`${userNameLeft} has left the space`);
+            break;
+          
       }
     });
 
@@ -105,7 +133,7 @@ export default class TestScene extends Scene {
     map.createLayer("Above Player", tileset!, 0, 0);
 
     this.player = this.physics.add
-      .sprite(390, 1260, "snowman", "snowman000");
+      .sprite(390, 1260, avatarId, avatarId+"000");
      
 
     this.physics.add.collider(this.player, this.worldLayer!);
@@ -244,7 +272,7 @@ export default class TestScene extends Scene {
 
     if (moving) {
       this.player.anims.play(animationKey, true);
-      this.labels[this.userId!].setPosition(this.player.x,this.player.y)
+      this.labels[this.userId!]?.setPosition(this.player.x,this.player.y)
 
     } else {
       this.player.body.setVelocity(0);
@@ -277,8 +305,8 @@ export default class TestScene extends Scene {
     }
   }
 
-  addPlayer(playerId: string, x: number, y: number) {
-    const newPlayer = this.physics.add.sprite(x, y, "pajji");
+  addPlayer(playerId: string, x: number, y: number,userName:string,avatarId:string) {
+    const newPlayer = this.physics.add.sprite(x, y, avatarId);
     this.players[playerId] = newPlayer;
     // this.physics.add.collider(this.player,newPlayer)
     // Array.from(Object(this.players)).forEach((player:any)=>{
@@ -287,7 +315,7 @@ export default class TestScene extends Scene {
     this.physics.add.collider(this.worldLayer!, newPlayer);
 
     // Add label for the player
-    const label = this.add.text(x, y - 20, `Player ${playerId}`, {
+    const label = this.add.text(x, y - 20, `${userName}`, {
       fontSize: "12px",
       color: "#ffffff",
       backgroundColor: "#000000",

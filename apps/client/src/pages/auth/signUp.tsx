@@ -37,6 +37,7 @@ const SignUp = () => {
       console.log(data)
       const {id,avatarId, userName,email,createdAt} = data?.data?.user
       const token = data?.data?.token
+      localStorage.setItem("token",token!)
       dispatch(login({user:{userName,email,avatarId,id,createdAt},token}))
       toast.success("Account created successful")
       navigate("/")

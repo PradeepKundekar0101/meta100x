@@ -13,8 +13,7 @@ const Room = () => {
       return (await api.get("/room/code/"+roomCode)).data
     }
   })
-  console.log(error)
-  console.log(data)
+
   useEffect(() => {
     if(data && data.data){
        initPhaser(data.data.mapId);

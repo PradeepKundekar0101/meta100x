@@ -1,11 +1,12 @@
 import { catchAsync } from "../utils/Api";
-import prismaClient from "@repo/db/client";
+
+import prismaClient from "@repo/db/client"
 import { signUpSchema, signInSchema } from "@repo/types/zodSchema";
 import { Request, Response } from "express";
 import { hash, compare } from "../utils/bcrypt";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "kyunahihoripadhai?";
+const JWT_SECRET = process.env.JWT_SECRET || "pradeep";
 const JWT_EXPIRES_IN = "7d";
 
 export const signUp = catchAsync(async (req: Request, res: Response) => {

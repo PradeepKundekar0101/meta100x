@@ -1,13 +1,16 @@
 import WebSocket from "ws"
-import {EventTypes,UserEvents} from "@repo/types"
+import {EventTypes,UserEvents,User as TUser} from "@repo/types"
 import { RoomManager } from "./RoomManager";
+import {JwtPayload, verify} from "jsonwebtoken"
 import crypto from "crypto"
+import prismaClient from "@repo/db/client"
+const JWT_SECRET=process.env.JWT_SECRET || "pradeep"
 export class User{
     public id:string = ""
     private roomId:string=""
-    public playerX:number | undefined = undefined;
-    public playerY:number | undefined = undefined;
-
+    public playerX:number | undefined 
+    public playerY:number | undefined
+    public user:Partial<TUser> | undefined 
     constructor(private ws:WebSocket){
         this.id = crypto.randomUUID()
     }
@@ -15,17 +18,39 @@ export class User{
         this.ws.send(message)
     }
     initHandler = ()=>{
-
-        this.ws.on("message",(data)=>{
+        this.ws.on("message",async (data)=>{
             try {
                 const {type,payload}:{type:UserEvents,payload:any} = JSON.parse(data.toString())
                 switch(type){
                     case "JOIN_SPACE":
-                        const {roomId} = payload;
-                        if(!roomId){
-                            //TODO Send invalid roomid
+                        const {roomId,token} = payload;
+                        if(!roomId || !token){
+                            this.sendMessage(JSON.stringify({
+                                type:"error",
+                                message:"No room id or token"
+                            }))
                             this.ws.close()
                         }
+                        const tokenVerify = verify(token, JWT_SECRET) as JwtPayload
+                        if(!tokenVerify){
+                            this.sendMessage(JSON.stringify({
+                                type:"error",
+                                message:"Invalid token"
+                            }))
+                            this.ws.close()
+                        }
+                        const userId = tokenVerify.userId
+                        const userFromDb = await prismaClient.user.findUnique({where:{id:userId!}})
+                        if(!userFromDb ){
+                            this.sendMessage(JSON.stringify({
+                                type:"error",
+                                message:"User not found"
+                            }))
+                            this.ws.close()
+                            return
+                        }
+                        const {userName,id,avatarId} = userFromDb
+                        this.user = {userName,id,avatarId:avatarId!}
                         this.roomId = roomId
                         this.playerX = 390,
                         this.playerY = 1260,
@@ -34,6 +59,8 @@ export class User{
                            type:EventTypes.Server.USER_JOINED,
                            payload:{
                             id:this.id,
+                            userName:this.user.userName!,
+                            avatarId:this.user.avatarId!,
                             x:this.playerX,
                             y:this.playerY
     
@@ -41,7 +68,7 @@ export class User{
                         }),roomId)
                         this.sendMessage(JSON.stringify({
                             type: EventTypes.Server.SPACE_JOINED,
-                            payload:{userId:this.id,users:Array.from(RoomManager.getInstance().rooms?.get(roomId)||[]).filter((e)=>e.id!=this.id).map((e)=>{return {id:e.id,x:e.playerX,y:e.playerY}})}
+                            payload:{userId:this.id,users:Array.from(RoomManager.getInstance().rooms?.get(roomId)||[]).filter((e)=>e.id!=this.id).map((e)=>{return {id:e.id,x:e.playerX,y:e.playerY,userName:e.user?.userName!,avatarId:e.user?.avatarId!}})}
                         }))
                         break;
                     
@@ -90,7 +117,8 @@ export class User{
                 RoomManager.getInstance().broadcastMessage(this, JSON.stringify({
                     type: EventTypes.Server.USER_LEFT,
                     payload: {
-                        id: this.id
+                        id: this.id,
+                        userName:this.user?.userName
                     }
                 }), this.roomId);
             }

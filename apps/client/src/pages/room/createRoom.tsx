@@ -2,15 +2,13 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-
 import mapData from "@/mock/mapData.json";
 import avatarData from "@/mock/avatars.json"
 import { Button } from "@/components/ui/button";
@@ -20,17 +18,21 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check, Copy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { login } from "@/store/slices/authSlice";
 
 const CreateRoom = () => {
+
   const [roomName, setRoomName] = useState("");
   const [mapId, setMapId] = useState(mapData[0].mapId);
-  const user = useAppSelector((state) => state.auth.user);
+  const {user,token} = useAppSelector((state) => state.auth);
+  const prevAvatarId = user?.avatarId
   const api = useAxios();
   const [roomCode, setRoomCode] = useState<undefined | string>(undefined);
   const [selectedAvatar, setSelectedAvatar] = useState<string | undefined>(user?.avatarId);
   const [showDialog, setShowDialog] = useState(false);
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const mutation = useMutation({
     mutationKey: ["createroom"],
     mutationFn: async () => {
@@ -54,7 +56,7 @@ const CreateRoom = () => {
     if (roomName.trim()) {
       mutation.mutate();
     } else {
-      toast.error("Please enter a room name");
+      toast.error("Please ente\r a room name");
     }
   };
 
@@ -65,6 +67,25 @@ const CreateRoom = () => {
       setTimeout(() => setCopied(false), 2000);
     }
   };
+  const updateAvatarMutation = useMutation({
+    mutationKey:["updateAvatar"],
+    mutationFn:async()=>{
+      return (await api.patch("/user/"+user?.id+'/avatar',{avatarId:selectedAvatar})).data
+    },
+    onSuccess:()=>{
+      dispatch(login({
+        user:{...user!,avatarId:selectedAvatar||"pajji"},token
+      }))
+      localStorage.setItem("avatarId",selectedAvatar||"")
+    }
+  })
+  const handleJoinRoom = ()=>{
+    if(selectedAvatar!==prevAvatarId){
+      updateAvatarMutation.mutate()
+    }
+    localStorage.setItem("roomId",roomCode!)
+    navigate("/space/"+roomCode)    
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -112,7 +133,7 @@ const CreateRoom = () => {
               </div>
             </div>
             
-            <Button onClick={()=>{navigate("/space/"+roomCode)}} className="w-full" size="lg">
+            <Button onClick={handleJoinRoom} className="w-full" size="lg">
               Join Room
             </Button>
           </div>
