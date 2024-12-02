@@ -24,6 +24,7 @@ export class User{
                 switch(type){
                     case "JOIN_SPACE":
                         const {roomId,token} = payload;
+
                         if(!roomId || !token){
                             this.sendMessage(JSON.stringify({
                                 type:"error",
@@ -96,7 +97,41 @@ export class User{
                             }
                         }),this.roomId)
                         break;
-                
+                    case "CHAT_MESSAGE_CLIENT":
+                        console.log("Hello")
+                        const {token:senderToken,content,userName:senderName,avatarId:senderAvatar} = payload
+                        const tokenVerified = verify(senderToken, JWT_SECRET) as JwtPayload
+                        if(!tokenVerified){
+                            this.sendMessage(JSON.stringify({
+                                type:"ERROR",
+                                message:"Invalid token"
+                            }))
+                            this.ws.close()
+                        }
+                        const createdAt = new Date()
+                        const senderId = tokenVerified.userId;
+                        this.sendMessage(JSON.stringify({
+                            type: EventTypes.Server.CHAT_MESSAGE_SERVER,
+                            payload:{
+                                senderId,
+                                content,
+                                userName:senderName,
+                                avatarId:senderAvatar,
+                                createdAt,
+                                userId:senderId
+                            }
+                        }))
+                        RoomManager.getInstance().broadcastMessage(this,JSON.stringify({
+                            type: EventTypes.Server.CHAT_MESSAGE_SERVER,
+                            payload:{
+                                senderId,
+                                content,
+                                userName:senderName,
+                                avatarId:senderAvatar,
+                                createdAt,
+                                userId:senderId
+                            }
+                        }),this.roomId)
                     }
             } catch (error) {
                 this.sendMessage(JSON.stringify({type:"error",payload:{message:"Invalid data"}}))
@@ -124,4 +159,8 @@ export class User{
             }
         });
     }
+}
+
+export const tokenVerify = (token:string)=>{
+    
 }

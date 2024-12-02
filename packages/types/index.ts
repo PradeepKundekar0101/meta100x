@@ -3,12 +3,14 @@ export const EventTypes = {
         JOIN_SPACE: "JOIN_SPACE",
         LEAVE_SPACE: "LEAVE_SPACE",
         MOVE: "MOVE",
+        CHAT_MESSAGE_CLIENT:"CHAT_MESSAGE_CLIENT"
     },
     Server: {
         SPACE_JOINED: "SPACE_JOINED",
         USER_JOINED: "USER_JOINED",
         USER_LEFT:"USER_LEFT",
         MOVEMENT: "MOVEMENT",
+        CHAT_MESSAGE_SERVER:"CHAT_MESSAGE_SERVER"
     },
 } as const;
 

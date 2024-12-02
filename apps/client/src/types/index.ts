@@ -1,3 +1,5 @@
+import { User } from "@repo/types"
+
 export type Space = {
     id:string,
     roomCode:string,
@@ -6,4 +8,11 @@ export type Space = {
     isActive:boolean,
     createdAt:string,
     roomName:string
+}
+export type Message ={
+    id:string,
+    createdAt:string,
+    senderId:string,
+    sender:User,
+    content:string
 }

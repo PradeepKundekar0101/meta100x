@@ -8,22 +8,34 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   userName  String
   email     String
   avatarId  String?
   password  String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   Room      Room[]
+  Message   Message[]
 }
 
 model Room {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   roomName  String
-  mapId     String   @default("")
+  mapId     String    @default("")
   roomCode  String
   creatorId String
-  isActive  Boolean  @default(true)
-  creator   User     @relation(references: [id], fields: [creatorId])
+  isActive  Boolean   @default(true)
+  creator   User      @relation(references: [id], fields: [creatorId])
+  createdAt DateTime  @default(now())
+  Message   Message[]
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  senderId  String
+  sender    User     @relation(references: [id], fields: [senderId])
+  content   String
+  roomId    String
+  room      Room     @relation(references: [id], fields: [roomId])
   createdAt DateTime @default(now())
 }

@@ -32,7 +32,7 @@ wss.on("error", (err:any) => {
 
 
 server.listen(8000, () => {
-  console.log('WebSocket server is running on port 8001');
+  console.log('WebSocket server is running on port 8000');
 });
 
 
