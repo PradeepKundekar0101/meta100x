@@ -4,9 +4,12 @@ import { useAppSelector } from '@/store/hooks'
 import { toast } from 'sonner'
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import {WebSocketSingleton} from '@/utils/websocket'
+import { useQuery } from '@tanstack/react-query'
+import useAxios from '@/hooks/use-axios'
 
 interface ChatBoxProps {
   isChatOpen: boolean
+  roomId:string
 }
 
 interface Message {
@@ -18,23 +21,46 @@ interface Message {
   isCurrentUser: boolean
 }
 
-const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen }) => {
+const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen,roomId }) => {
+
   const { user, token } = useAppSelector((state) => state.auth)
   const socketUrl = import.meta.env.VITE_WS_URL
   const socket = WebSocketSingleton.getInstance(socketUrl)
-
+  const api = useAxios()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
+  const {data} = useQuery({
+    queryKey:["chats"],
+    queryFn: async()=>{
+      return (await api.get("/chats/"+roomId)).data
+    }
+  })
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
-
+  
   useEffect(() => {
     scrollToBottom()
+   
   }, [messages])
-
+  useEffect(()=>{
+    if(data && data.data){
+      const msg :Message[]= []
+      data.data.chats.forEach((e:any)=>{
+        console.log(e)
+        msg.push({
+          userName: e.sender.userName,
+          avatarId: e.sender.avatarId,
+          createdAt: e.createdAt,
+          content: e.content,
+          id: e.sender.id,
+          isCurrentUser: e.sender.id===user?.id
+        })
+      })
+      setMessages(msg)
+    }
+  },[])
   const handleSendMessage = () => {
     if (inputMessage.trim()) {
       if (socket.readyState === WebSocket.OPEN) {

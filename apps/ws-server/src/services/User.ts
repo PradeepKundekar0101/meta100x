@@ -4,9 +4,11 @@ import { RoomManager } from "./RoomManager";
 import {JwtPayload, verify} from "jsonwebtoken"
 import crypto from "crypto"
 import prismaClient from "@repo/db/client"
+import {RabbitMQLib} from "@repo/rabbitmq/rabbit"
 const JWT_SECRET=process.env.JWT_SECRET || "pradeep"
 export class User{
     public id:string = ""
+    private roomCode:string=""
     private roomId:string=""
     public playerX:number | undefined 
     public playerY:number | undefined
@@ -50,9 +52,21 @@ export class User{
                             this.ws.close()
                             return
                         }
+                        const roomFromDb = await prismaClient.room.findFirst({
+                            where:{roomCode:roomId}
+                        })
+                        if(!roomFromDb ){
+                            this.sendMessage(JSON.stringify({
+                                type:"error",
+                                message:"Room not found"
+                            }))
+                            this.ws.close()
+                            return
+                        }
+                        this.roomId = roomFromDb.id
                         const {userName,id,avatarId} = userFromDb
                         this.user = {userName,id,avatarId:avatarId!}
-                        this.roomId = roomId
+                        this.roomCode = roomId
                         this.playerX = 390,
                         this.playerY = 1260,
                         RoomManager.getInstance().addUser(this,roomId)
@@ -95,10 +109,9 @@ export class User{
                                 xPos:this.playerX,
                                 yPos:this.playerY
                             }
-                        }),this.roomId)
+                        }),this.roomCode)
                         break;
                     case "CHAT_MESSAGE_CLIENT":
-                        console.log("Hello")
                         const {token:senderToken,content,userName:senderName,avatarId:senderAvatar} = payload
                         const tokenVerified = verify(senderToken, JWT_SECRET) as JwtPayload
                         if(!tokenVerified){
@@ -110,28 +123,24 @@ export class User{
                         }
                         const createdAt = new Date()
                         const senderId = tokenVerified.userId;
+                        const payloadToSend:any = {
+                            senderId,
+                            content,
+                            userName:senderName,
+                            avatarId:senderAvatar,
+                            createdAt,
+                            userId:senderId,
+                            roomId:this.roomId
+                        }
                         this.sendMessage(JSON.stringify({
                             type: EventTypes.Server.CHAT_MESSAGE_SERVER,
-                            payload:{
-                                senderId,
-                                content,
-                                userName:senderName,
-                                avatarId:senderAvatar,
-                                createdAt,
-                                userId:senderId
-                            }
+                            payload:payloadToSend
                         }))
                         RoomManager.getInstance().broadcastMessage(this,JSON.stringify({
                             type: EventTypes.Server.CHAT_MESSAGE_SERVER,
-                            payload:{
-                                senderId,
-                                content,
-                                userName:senderName,
-                                avatarId:senderAvatar,
-                                createdAt,
-                                userId:senderId
-                            }
-                        }),this.roomId)
+                            payload:payloadToSend
+                        }),this.roomCode)
+                        RabbitMQLib.enqueue(JSON.stringify(payloadToSend))
                     }
             } catch (error) {
                 this.sendMessage(JSON.stringify({type:"error",payload:{message:"Invalid data"}}))
@@ -140,22 +149,22 @@ export class User{
         })
         this.ws.on("error", (error) => {
             console.error(`WebSocket error for user ${this.id}:`, error);
-            if (this.roomId) {
-                RoomManager.getInstance().removeUser(this, this.roomId);
+            if (this.roomCode) {
+                RoomManager.getInstance().removeUser(this, this.roomCode);
             }
         });
         
         this.ws.on("close", () => {
             console.log(`WebSocket closed for user ${this.id}`);
-            if (this.roomId) {
-                RoomManager.getInstance().removeUser(this, this.roomId);
+            if (this.roomCode) {
+                RoomManager.getInstance().removeUser(this, this.roomCode);
                 RoomManager.getInstance().broadcastMessage(this, JSON.stringify({
                     type: EventTypes.Server.USER_LEFT,
                     payload: {
                         id: this.id,
                         userName:this.user?.userName
                     }
-                }), this.roomId);
+                }), this.roomCode);
             }
         });
     }

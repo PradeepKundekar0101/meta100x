@@ -97,7 +97,7 @@ const Room = () => {
         <Dock />
       </div>
 
-      <ChatBox isChatOpen={isChatOpen} />
+      {data && data.data && <ChatBox isChatOpen={isChatOpen} roomId={data.data.id} />}
 
       <button
         onClick={toggleChat}

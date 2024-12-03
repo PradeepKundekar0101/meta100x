@@ -1,0 +1,22 @@
+{
+  "name": "@repo/rabbitmq",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "exports":{
+    "./rabbit":"./src/RabbitMqClass.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/amqplib": "^0.10.5",
+    "amqplib": "^0.10.5"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
