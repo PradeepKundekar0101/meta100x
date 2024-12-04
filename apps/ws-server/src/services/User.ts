@@ -88,7 +88,7 @@ export class User {
               "MESSAGE",
               JSON.stringify({
                 userId:this.id,
-                roomId:this.roomId,
+                roomCode:this.roomCode,
                 type: EventTypes.Server.USER_JOINED,
                 payload: {
                   id: this.id,
@@ -141,10 +141,10 @@ export class User {
               "MESSAGE",
               JSON.stringify({
                 userId:this.id,
-                roomId:this.roomId,
+                roomCode:this.roomCode,
                 type: EventTypes.Server.MOVEMENT,
                 payload: {
-                  userId: this.user?.id!,
+                  userId: this.id!,
                   x: velocityX,
                   y: velocityY,
                   xPos: this.playerX,
@@ -186,7 +186,7 @@ export class User {
               "MESSAGE",
               JSON.stringify({
                 userId:this.id,
-                roomId:this.roomId,
+                roomCode:this.roomCode,
                 type: EventTypes.Server.CHAT_MESSAGE_SERVER,
                 payload: payloadToSend,
               })
@@ -223,7 +223,7 @@ export class User {
           "MESSAGE",
           JSON.stringify({
             userId:this.id,
-            roomId:this.roomId,
+            roomCode:this.roomCode,
             type: EventTypes.Server.USER_LEFT,
             payload: {
               id: this.id,

@@ -32,6 +32,7 @@ export class RoomManager{
         if(!this.rooms?.has(roomId)){
             return;
         }
+        console.log(this.rooms)
         this.rooms.get(roomId)?.forEach((user)=>{
             if(user.id!=senderId){
                 try {

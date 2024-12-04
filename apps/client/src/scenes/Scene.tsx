@@ -29,13 +29,10 @@ export default class TestScene extends Scene {
   }
 
   preload() {
-    // Any preload logic if needed
   }
 
   private setupWebSocket() {
     this.socket = WebSocketSingleton.getInstance();
-
-    // Send initial join space message
     if (this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(
         JSON.stringify({
@@ -93,6 +90,7 @@ export default class TestScene extends Scene {
     });
 
     this.movementUnsubscribe = WebSocketSingleton.subscribe('MOVEMENT', (msg) => {
+      console.log("MV")
       const {
         userId,
         x: velocityX,
@@ -102,6 +100,7 @@ export default class TestScene extends Scene {
       } = msg.payload;
 
       const player = this.players[userId];
+      console.log(player)
       if (player) {
         const dis = Phaser.Math.Distance.Between(
           player.body.x + 16,

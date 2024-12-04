@@ -24,18 +24,14 @@ const Room = () => {
   });
 
   useEffect(() => {
-    // Establish WebSocket connection when room data is loaded
-    if (data && data.data && user) {
-      // Set room ID in localStorage for use in Scene
-      localStorage.setItem("roomId", roomCode!);
 
-      // Initialize Phaser game
+    if (data && data.data && user) {
+
+      localStorage.setItem("roomId", roomCode!);
       initPhaser(data.data.mapId);
 
-      // Optional: Set up WebSocket connection
       const ws = WebSocketSingleton.getInstance();
-
-      // You can add additional WebSocket setup here if needed
+      WebSocketSingleton.setPlayers({userId:user.id,userName:user.userName,avatarId:user.avatarId!})
       ws.onopen = () => {
         toast("Connected to room", { position: "bottom-left" });
       };
@@ -45,7 +41,6 @@ const Room = () => {
         toast.error("WebSocket connection failed", { position: "bottom-left" });
       };
 
-      // Cleanup WebSocket connection when component unmounts
       return () => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.close();

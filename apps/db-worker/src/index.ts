@@ -1,8 +1,10 @@
 import { RabbitMQLib } from "@repo/rabbitmq/rabbit";
 import prismaClient from "@repo/db/client"
+import dotenv from "dotenv"
+dotenv.config()
 const processMessage = async (message: string) => {
-
     const {senderId,content,roomId} = JSON.parse(message)
+    console.log("Adding message")
     await prismaClient.message.create({ data: { content,senderId,roomId } });
 };
 

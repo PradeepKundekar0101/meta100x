@@ -1,4 +1,4 @@
-import  {  useState } from 'react';
+import  {  useEffect, useState } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -38,6 +38,9 @@ const Dock = () => {
   const toggleVideo = () => {
     setVideoEnabled(!videoEnabled);
   };
+  useEffect(()=>{
+    console.log(WebSocketSingleton.getPlayers())
+  },[WebSocketSingleton])
 
 
   return (

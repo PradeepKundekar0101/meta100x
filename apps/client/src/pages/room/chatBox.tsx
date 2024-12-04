@@ -60,7 +60,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen,roomId }) => {
       })
       setMessages(msg)
     }
-  },[])
+  },[data])
   const handleSendMessage = () => {
     if (inputMessage.trim()) {
       if (WebSocketSingleton.getInstance().readyState === WebSocket.OPEN) {
@@ -80,6 +80,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen,roomId }) => {
   useEffect(() => {
     const chatMessageUnsubscribe = WebSocketSingleton.subscribe('CHAT_MESSAGE_SERVER', (msg) => {
       const { avatarId, userName, createdAt, content, userId } = msg.payload;
+      console.log(msg)
       setMessages(prevMessages => [
         ...prevMessages,
         {
