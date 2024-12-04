@@ -1,21 +1,25 @@
 import { Scene } from "phaser";
 import { createAnimations } from "./utils";
-import {WebSocketSingleton} from "@/utils/websocket"
+import { WebSocketSingleton } from "@/utils/websocket";
 import { toast } from "sonner";
+
 const avatarId = localStorage.getItem("avatarId") || "pajji";
 const roomId = localStorage.getItem("roomId") || "default";
 const token = localStorage.getItem("token") || "token";
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8000"
+
 export default class TestScene extends Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private userId: string | undefined;
   private worldLayer: Phaser.Tilemaps.TilemapLayer | undefined | null;
-  private players: Record<
-    string,
-    Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
-  >;
+  private players: Record<string, Phaser.Types.Physics.Arcade.SpriteWithDynamicBody>;
   private labels: Record<string, Phaser.GameObjects.Text>;
   private socket: WebSocket | null;
+
+  // Unsubscribe functions to clean up listeners
+  private spaceJoinedUnsubscribe?: () => void;
+  private movementUnsubscribe?: () => void;
+  private userJoinedUnsubscribe?: () => void;
+  private userLeftUnsubscribe?: () => void;
 
   constructor() {
     super("garden");
@@ -24,13 +28,16 @@ export default class TestScene extends Scene {
     this.socket = null;
   }
 
-  preload() {}
+  preload() {
+    // Any preload logic if needed
+  }
 
-  create() {
-    this.socket = WebSocketSingleton.getInstance(WS_URL)
-    this.socket.addEventListener("open", () => {
-      toast("Connection successful ✅",{position:"bottom-left"})
-      this.socket?.send(
+  private setupWebSocket() {
+    this.socket = WebSocketSingleton.getInstance();
+
+    // Send initial join space message
+    if (this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(
         JSON.stringify({
           type: "JOIN_SPACE",
           payload: {
@@ -39,101 +46,117 @@ export default class TestScene extends Scene {
           },
         })
       );
+    } else {
+      this.socket.addEventListener('open', () => {
+        this.socket?.send(
+          JSON.stringify({
+            type: "JOIN_SPACE",
+            payload: {
+              roomId,
+              token,
+            },
+          })
+        );
+      });
+    }
+
+    // Subscribe to different message types
+    this.spaceJoinedUnsubscribe = WebSocketSingleton.subscribe('SPACE_JOINED', (msg) => {
+      this.userId = msg.payload.userId;
+      
+      if (Array.isArray(msg.payload.users)) {
+        msg.payload.users.forEach((e: any) => {
+          const { id, x, y, userName, avatarId } = e;
+          WebSocketSingleton.setPlayers({userName, avatarId, userId: id});
+          this.addPlayer(id, x, y, userName, avatarId);
+        });
+      }
+
+      // Add label for current user
+      const label = this.add
+        .text(390, 1260, `YOU`, {
+          fontSize: "12px",
+          color: "#000",
+          backgroundColor: "#fff",
+          padding: { x: 4, y: 2 },
+        })
+        .setOrigin(1.5);
+      
+      this.labels[msg.payload.userId] = label;
+      toast("Space joined successfully");
     });
 
+    this.userJoinedUnsubscribe = WebSocketSingleton.subscribe('USER_JOINED', (msg) => {
+      const { id, x, y, userName, avatarId } = msg.payload;
+      WebSocketSingleton.setPlayers({userName, avatarId, userId: id});
+      this.addPlayer(id, x, y, userName, avatarId);
+    });
 
-    this.socket.addEventListener("message", (message) => {
-      const { type, payload } = JSON.parse(message.data);
-      switch (type) {
-        case "USER_JOINED":
-          const { id, x, y, userName, avatarId} = payload;
-          WebSocketSingleton.setPlayers({userName,avatarId,userId:id})
-          this.addPlayer(id, x, y, userName, avatarId);
-          break;
-          
-          case "SPACE_JOINED":
-          this.userId = payload.userId;
-          console.log(payload)
-          if (Array.isArray(payload.users)) {
-            payload.users.forEach((e: any) => {
-              const { id, x, y, userName, avatarId } = e;
-              WebSocketSingleton.setPlayers({userName,avatarId,userId:id})
-              this.addPlayer(id, x, y, userName, avatarId);
-            });
-          }
-          const label = this.add
-            .text(390, 1260, `YOU`, {
-              fontSize: "12px",
-              color: "#000",
-              backgroundColor: "#fff",
-              padding: { x: 4, y: 2 },
-            })
-            .setOrigin(1.5);
-          console.log("Payload userId");
-          console.log(payload.userId);
-          this.labels[payload.userId] = label;
+    this.movementUnsubscribe = WebSocketSingleton.subscribe('MOVEMENT', (msg) => {
+      const {
+        userId,
+        x: velocityX,
+        y: velocityY,
+        xPos: targetX,
+        yPos: targetY,
+      } = msg.payload;
 
-          break;
-        case "MOVEMENT":
-          const {
-            userId,
-            x: velocityX,
-            y: velocityY,
-            xPos: targetX,
-            yPos: targetY,
-          } = payload;
-          const player = this.players[userId];
-          if (player) {
-            const dis = Phaser.Math.Distance.Between(
-              player.body.x + 16,
-              player.body.y + 32,
-              targetX,
-              targetY
-            );
-            const duration = (dis / 100) * 1000;
-            let animationKey = "";
-            const texturekey = player.texture.key;
-            console.log("Movement ", texturekey);
-            if (velocityX < 0) animationKey = `${texturekey}-left`;
-            else if (velocityX > 0) animationKey = `${texturekey}-right`;
-            else if (velocityY < 0) animationKey = `${texturekey}-back`;
-            else if (velocityY > 0) animationKey = `${texturekey}-front`;
+      const player = this.players[userId];
+      if (player) {
+        const dis = Phaser.Math.Distance.Between(
+          player.body.x + 16,
+          player.body.y + 32,
+          targetX,
+          targetY
+        );
+        const duration = (dis / 100) * 1000;
+        let animationKey = "";
+        const texturekey = player.texture.key;
 
-            if (!player.anims.isPlaying) {
-              player.anims.play(animationKey);
-            }
+        if (velocityX < 0) animationKey = `${texturekey}-left`;
+        else if (velocityX > 0) animationKey = `${texturekey}-right`;
+        else if (velocityY < 0) animationKey = `${texturekey}-back`;
+        else if (velocityY > 0) animationKey = `${texturekey}-front`;
 
-            this.tweens.add({
-              targets: player,
-              x: targetX + 16,
-              y: targetY + 32,
-              duration,
-              ease: "Linear",
-              onComplete: () => {
-                player.anims.stop();
-              },
-            });
-          }
-          break;
-        case "USER_LEFT":
-          const { id: userIdToDestroy, userName: userNameLeft } = payload;
+        if (!player.anims.isPlaying) {
+          player.anims.play(animationKey);
+        }
 
-          const playerToRemove = this.players[userIdToDestroy];
-          if (playerToRemove) {
-            playerToRemove.destroy();
-            delete this.players[userIdToDestroy];
-          }
-
-          const labelToRemove = this.labels[userIdToDestroy];
-          if (labelToRemove) {
-            labelToRemove.destroy();
-            delete this.labels[userIdToDestroy];
-          }
-          WebSocketSingleton.removePlayer(userIdToDestroy)
-          console.log(`${userNameLeft} has left the space`);
-          break;
+        this.tweens.add({
+          targets: player,
+          x: targetX + 16,
+          y: targetY + 32,
+          duration,
+          ease: "Linear",
+          onComplete: () => {
+            player.anims.stop();
+          },
+        });
       }
     });
+
+    this.userLeftUnsubscribe = WebSocketSingleton.subscribe('USER_LEFT', (msg) => {
+      const { id: userIdToDestroy, userName: userNameLeft } = msg.payload;
+
+      const playerToRemove = this.players[userIdToDestroy];
+      if (playerToRemove) {
+        playerToRemove.destroy();
+        delete this.players[userIdToDestroy];
+      }
+
+      const labelToRemove = this.labels[userIdToDestroy];
+      if (labelToRemove) {
+        labelToRemove.destroy();
+        delete this.labels[userIdToDestroy];
+      }
+
+      WebSocketSingleton.removePlayer(userIdToDestroy);
+      console.log(`${userNameLeft} has left the space`);
+    });
+  }
+
+  create() {
+    this.setupWebSocket();
 
     const map = this.make.tilemap({ key: "map" });
     const tileset = map.addTilesetImage(
@@ -227,6 +250,22 @@ export default class TestScene extends Scene {
       if (player && label) {
         label.setPosition(player.x, player.y - 20);
       }
+    }
+  }
+
+  // Cleanup method to unsubscribe from WebSocket events
+  shutdown() {
+    if (this.spaceJoinedUnsubscribe) {
+      this.spaceJoinedUnsubscribe();
+    }
+    if (this.movementUnsubscribe) {
+      this.movementUnsubscribe();
+    }
+    if (this.userJoinedUnsubscribe) {
+      this.userJoinedUnsubscribe();
+    }
+    if (this.userLeftUnsubscribe) {
+      this.userLeftUnsubscribe();
     }
   }
 

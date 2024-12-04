@@ -28,12 +28,12 @@ export class RoomManager{
         if(this.rooms.get(roomId)?.size==0)
             this.rooms.delete(roomId)
     }
-    public broadcastMessage = (sender:User,message:string,roomId:string)=>{
+    public broadcastMessage = (senderId:string,message:string,roomId:string)=>{
         if(!this.rooms?.has(roomId)){
             return;
         }
         this.rooms.get(roomId)?.forEach((user)=>{
-            if(user.id!=sender.id){
+            if(user.id!=senderId){
                 try {
                     user.sendMessage(message);
                 } catch (error) {

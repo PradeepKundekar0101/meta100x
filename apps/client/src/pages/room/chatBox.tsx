@@ -24,8 +24,8 @@ interface Message {
 const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen,roomId }) => {
 
   const { user, token } = useAppSelector((state) => state.auth)
-  const socketUrl = import.meta.env.VITE_WS_URL
-  const socket = WebSocketSingleton.getInstance(socketUrl)
+
+  // const socket = WebSocketSingleton.getInstance()
   const api = useAxios()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState("")
@@ -63,8 +63,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen,roomId }) => {
   },[])
   const handleSendMessage = () => {
     if (inputMessage.trim()) {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({
+      if (WebSocketSingleton.getInstance().readyState === WebSocket.OPEN) {
+        WebSocketSingleton.getInstance().send(JSON.stringify({
           type: "CHAT_MESSAGE_CLIENT",
           payload: {
             token,
@@ -77,38 +77,27 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen,roomId }) => {
       setInputMessage("")
     }
   }
-
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      const { type, payload } = JSON.parse(event.data)
-      
-      if (type === "ERROR") {
-        toast(payload.message || "Error from server")
-      }
-      
-      if (type === "CHAT_MESSAGE_SERVER") {
-        const { avatarId, userName, createdAt, content, userId } = payload
-        setMessages(prevMessages => [
-          ...prevMessages,
-          {
-            id: String(Date.now()),
-            content,
-            userName: userId === user?.id ? "You" : userName,
-            createdAt,
-            avatarId,
-            isCurrentUser: userId === user?.id
-          }
-        ])
-      }
-    }
-
-    socket.addEventListener("message", handleMessage)
-
+    const chatMessageUnsubscribe = WebSocketSingleton.subscribe('CHAT_MESSAGE_SERVER', (msg) => {
+      const { avatarId, userName, createdAt, content, userId } = msg.payload;
+      setMessages(prevMessages => [
+        ...prevMessages,
+        {
+          id: String(Date.now()),
+          content,
+          userName: userId === user?.id ? "You" : userName,
+          createdAt,
+          avatarId,
+          isCurrentUser: userId === user?.id
+        }
+      ]);
+    });
+  
+    // Return cleanup function to unsubscribe
     return () => {
-      socket.removeEventListener("message", handleMessage)
-    }
-  }, [socket, user])
-
+      chatMessageUnsubscribe();
+    };
+  }, [user]);
   return (
     <div
       className={`fixed chat top-0 h-screen w-80 bg-black bg-opacity-20 transition-transform duration-300 ${

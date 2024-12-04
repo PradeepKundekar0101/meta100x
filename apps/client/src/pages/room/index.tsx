@@ -7,14 +7,15 @@ import { getScene } from "@/utils/getScene";
 import ChatBox from "./chatBox";
 import Dock from "./dock";
 import { WebSocketSingleton } from "@/utils/websocket";
-import { SOCKET_URL } from "@/config/configurations";
 import { useAppSelector } from "@/store/hooks";
+import { toast } from "sonner";
 
 const Room = () => {
   const { roomCode } = useParams();
-  const user = useAppSelector((state)=>state.auth.user)
+  const { user, token } = useAppSelector((state) => state.auth);
   const api = useAxios();
   const [isChatOpen, setIsChatOpen] = useState(true);
+  
   const { data, error, isError, isLoading } = useQuery({
     queryKey: ["room"],
     queryFn: async () => {
@@ -23,16 +24,35 @@ const Room = () => {
   });
 
   useEffect(() => {
+    // Establish WebSocket connection when room data is loaded
     if (data && data.data && user) {
+      // Set room ID in localStorage for use in Scene
+      localStorage.setItem("roomId", roomCode!);
+
+      // Initialize Phaser game
       initPhaser(data.data.mapId);
-      WebSocketSingleton.setPlayers({userId:user?.id,userName:user?.userName,avatarId:localStorage.getItem("avatarId")||"pajji"})
-      console.log(WebSocketSingleton.getPlayers().length)
+
+      // Optional: Set up WebSocket connection
+      const ws = WebSocketSingleton.getInstance();
+
+      // You can add additional WebSocket setup here if needed
+      ws.onopen = () => {
+        toast("Connected to room", { position: "bottom-left" });
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        toast.error("WebSocket connection failed", { position: "bottom-left" });
+      };
+
+      // Cleanup WebSocket connection when component unmounts
+      return () => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      };
     }
-    return () => {
-      WebSocketSingleton.getInstance(SOCKET_URL).close()
-      WebSocketSingleton.clearPlayers()
-    };
-  }, [data]);
+  }, [data, user]);
 
   async function initPhaser(mapId: string) {
     const Phaser = await import("phaser");
@@ -85,7 +105,6 @@ const Room = () => {
 
   return (
     <div className="flex relative h-screen overflow-hidden">
-
       <div className="flex-grow relative bg-black">
         <div id="game-content" className="w-full h-full" />
         {data && data.data && (
@@ -97,7 +116,12 @@ const Room = () => {
         <Dock />
       </div>
 
-      {data && data.data && <ChatBox isChatOpen={isChatOpen} roomId={data.data.id} />}
+      {data && data.data && (
+        <ChatBox 
+          isChatOpen={isChatOpen} 
+          roomId={data.data.id} 
+        />
+      )}
 
       <button
         onClick={toggleChat}
