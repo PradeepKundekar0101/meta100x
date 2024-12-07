@@ -3,7 +3,8 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "@/hooks/use-axios";
 import { ChevronLeft, Settings } from "lucide-react";
-import { getScene } from "@/utils/getScene";
+// import { getScene } from "@/utils/getScene";
+import MainScene from "@/scenes/Scene"
 import ChatBox from "./chatBox";
 import Dock from "./dock";
 import { WebSocketSingleton } from "@/utils/websocket";
@@ -21,6 +22,7 @@ import {
 
   Track,
 } from "livekit-client";
+import Preloader from "@/scenes/Preloader";
 const Room: React.FC = () => {
   const wsUrl = import.meta.env.VITE_LIVEKIT_WSS_URL;
   const { roomCode } = useParams();
@@ -74,7 +76,7 @@ const Room: React.FC = () => {
         new Phaser.Game({
           type: Phaser.AUTO,
           title: roomCode,
-          scene: getScene(mapId),
+          scene: [Preloader,MainScene],
           parent: "game-content",
           width: window.innerWidth,
           height: window.innerHeight,

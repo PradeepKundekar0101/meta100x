@@ -6,6 +6,7 @@ import { LiveKitClient } from "@/lib/livekit";
 
 const avatarId = localStorage.getItem("avatarId") || "pajji";
 const roomId = localStorage.getItem("roomId") || "default";
+
 const token = localStorage.getItem("token") || "token";
 
 export default class TestScene extends Scene {

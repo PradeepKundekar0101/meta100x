@@ -8,5 +8,38 @@
         "name":"Snowman",
         "thumbnail":"avatar_thumbnail/snow.png",
         "id":"snowman"
+    },
+
+    {
+        "name":"Cat",
+        "thumbnail":"avatar_thumbnail/cat.png",
+        "id":"cat"
+    },
+    {
+        "name":"Bride",
+        "thumbnail":"avatar_thumbnail/bride.png",
+        "id":"bride"
+    },
+    {
+        "name":"Zombie",
+        "thumbnail":"avatar_thumbnail/zombie.png",
+        "id":"zombie"
+    },
+    {
+        "name":"Vampire",
+        "thumbnail":"avatar_thumbnail/vampire.png",
+        "id":"vampire"
+    },
+    {
+        "name":"Gingerbread",
+        "thumbnail":"avatar_thumbnail/gingerbread.png",
+        "id":"gingerbread"
+    },
+
+    {
+        "name":"Wolf",
+        "thumbnail":"avatar_thumbnail/wolf.png",
+        "id":"wolf"
     }
+
 ]

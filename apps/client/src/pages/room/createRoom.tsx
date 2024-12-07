@@ -53,8 +53,10 @@ const CreateRoom = () => {
   });
 
   const handleCreate = async () => {
+
     if (roomName.trim()) {
       mutation.mutate();
+      localStorage.setItem("mapId",mapId)
     } else {
       toast.error("Please ente\r a room name");
     }

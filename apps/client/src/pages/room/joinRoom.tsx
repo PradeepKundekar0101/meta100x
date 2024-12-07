@@ -84,6 +84,7 @@ const JoinRoom = () => {
       updateAvatarMutation.mutate();
     }
     localStorage.setItem("roomId", roomCode);
+    localStorage.setItem("mapId", roomDetails.mapId);
     navigate(`/space/${roomCode}`);
   };
 
