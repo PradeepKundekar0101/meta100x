@@ -1,4 +1,4 @@
-import  {  useEffect, useState } from 'react';
+import {  useRef, useState } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -20,32 +20,38 @@ import {
 } from "@/components/ui/alert-dialog";
 import {WebSocketSingleton} from '@/utils/websocket';
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { Info, LogOutIcon, Mic, MicOff, UsersRoundIcon, Video, VideoOff } from "lucide-react";
+import { Info,  LogOutIcon, UsersRoundIcon } from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
+import { TrackToggle } from '@livekit/components-react';
+import { Track } from 'livekit-client';
 
-const Dock = () => {
-  const [audioEnabled, setAudioEnabled] = useState(true);
-  const [videoEnabled, setVideoEnabled] = useState(true);
+interface DockType {}
+
+const Dock: React.FC<DockType> = () => {
+
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
-  const navigate = useNavigate()
-  const toggleAudio = () => {
-    setAudioEnabled(!audioEnabled);
-  };
-  
-  const toggleVideo = () => {
-    setVideoEnabled(!videoEnabled);
-  };
-  useEffect(()=>{
-    console.log(WebSocketSingleton.getPlayers())
-  },[WebSocketSingleton])
-
+  const navigate = useNavigate();
+  const controlBarRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="absolute bottom-2 media left-1/2 transform -translate-x-1/2 bg-[#0008] backdrop-blur-2xl p-2 px-10 flex justify-center rounded-full space-x-4">
-      {/* Info Dialog */}
+
+      <div ref={controlBarRef} className="flex items-center space-x-4">
+     
+        <TrackToggle  className={`p-2 rounded-full
+             bg-gray-700 text-white hover:bg-gray-600
+         transition-all duration-300 ease-in-out hover:scale-105`} source={Track.Source.Microphone} />
+        <TrackToggle  className={`p-2 rounded-full ${
+           
+             "bg-gray-700 text-white hover:bg-gray-600" 
+           
+        } transition-all duration-300 ease-in-out hover:scale-105`} source={Track.Source.Camera} />
+        {/* <TrackToggle source={Track.Source.ScreenShare} /> */}
+      </div>
+
       <Dialog>
         <DialogTrigger asChild>
           <button 
@@ -70,7 +76,6 @@ const Dock = () => {
         </DialogContent>
       </Dialog>
 
-
       <Dialog>
         <DialogTrigger asChild>
           <button 
@@ -78,10 +83,9 @@ const Dock = () => {
           >
             <UsersRoundIcon />
             <Badge 
- 
               className="absolute -top-2 -right-2 px-2 py-1 text-xs"
             >
-              { WebSocketSingleton.getPlayers().length}
+              {WebSocketSingleton.getPlayers().length}
             </Badge>
           </button>
         </DialogTrigger>
@@ -102,7 +106,6 @@ const Dock = () => {
               >
                 <Avatar>
                   <AvatarImage src={"../../public/avatar_thumbnail/"+participant.avatarId+".png"} alt={participant.userName} />
-
                 </Avatar>
                 <span>{participant.userName}</span>
               </div>
@@ -111,31 +114,8 @@ const Dock = () => {
         </DialogContent>
       </Dialog>
 
-
-      <button
-        onClick={toggleAudio}
-        className={`p-2 rounded-full ${
-          audioEnabled 
-            ? "bg-gray-700 text-white hover:bg-gray-600" 
-            : "bg-red-600 text-white hover:bg-red-500"
-        } transition-all duration-300 ease-in-out hover:scale-105`}
-      >
-        {audioEnabled ? <Mic size={24} /> : <MicOff size={24} />}
-      </button>
-
-
-      <button
-        onClick={toggleVideo}
-        className={`p-2 rounded-full ${
-          videoEnabled 
-            ? "bg-gray-700 text-white hover:bg-gray-600" 
-            : "bg-red-600 text-white hover:bg-red-500"
-        } transition-all duration-300 ease-in-out hover:scale-105`}
-      >
-        {videoEnabled ? <Video size={24} /> : <VideoOff size={24} />}
-      </button>
-
-      {/* Exit Dialog */}
+    
+     
       <AlertDialog open={isExitDialogOpen} onOpenChange={setIsExitDialogOpen}>
         <AlertDialogTrigger asChild>
           <button 

@@ -7,6 +7,8 @@ import prismaClient from "@repo/db/client";
 import { RabbitMQLib } from "@repo/rabbitmq/rabbit";
 import { RedisClient } from "src/lib/Redis";
 import { handleMessages } from "./handleIncoming";
+
+const { generateToken } = require("src/lib/LiveKit.mjs");
 const JWT_SECRET = process.env.JWT_SECRET || "pradeep";
 export class User {
   id: string = "";
@@ -99,11 +101,13 @@ export class User {
                 },
               })
             );
+            const liveKitAccessToken = await generateToken(this.roomCode,this.user.userName!)
             this.sendMessage(
               JSON.stringify({
                 type: EventTypes.Server.SPACE_JOINED,
                 payload: {
                   userId: this.id,
+                  liveKitAccessToken,
                   users: Array.from(
                     RoomManager.getInstance().rooms?.get(roomId) || []
                   )
@@ -115,6 +119,7 @@ export class User {
                         y: e.playerY,
                         userName: e.user?.userName!,
                         avatarId: e.user?.avatarId!,
+                        
                       };
                     }),
                 },

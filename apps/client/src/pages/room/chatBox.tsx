@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Send } from "lucide-react"
 import { useAppSelector } from '@/store/hooks'
-import { toast } from 'sonner'
+
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import {WebSocketSingleton} from '@/utils/websocket'
 import { useQuery } from '@tanstack/react-query'
@@ -48,7 +48,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen,roomId }) => {
     if(data && data.data){
       const msg :Message[]= []
       data.data.chats.forEach((e:any)=>{
-        console.log(e)
+
         msg.push({
           userName: e.sender.userName,
           avatarId: e.sender.avatarId,

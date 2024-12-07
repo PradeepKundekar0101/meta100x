@@ -30,9 +30,10 @@ export class RoomManager{
     }
     public broadcastMessage = (senderId:string,message:string,roomId:string)=>{
         if(!this.rooms?.has(roomId)){
+
             return;
         }
-        console.log(this.rooms)
+        
         this.rooms.get(roomId)?.forEach((user)=>{
             if(user.id!=senderId){
                 try {

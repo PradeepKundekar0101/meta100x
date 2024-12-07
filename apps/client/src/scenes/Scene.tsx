@@ -2,6 +2,7 @@ import { Scene } from "phaser";
 import { createAnimations } from "./utils";
 import { WebSocketSingleton } from "@/utils/websocket";
 import { toast } from "sonner";
+import { LiveKitClient } from "@/lib/livekit";
 
 const avatarId = localStorage.getItem("avatarId") || "pajji";
 const roomId = localStorage.getItem("roomId") || "default";
@@ -59,6 +60,7 @@ export default class TestScene extends Scene {
 
     // Subscribe to different message types
     this.spaceJoinedUnsubscribe = WebSocketSingleton.subscribe('SPACE_JOINED', (msg) => {
+      LiveKitClient.setToken(msg.payload.liveKitAccessToken!)
       this.userId = msg.payload.userId;
       
       if (Array.isArray(msg.payload.users)) {
@@ -148,6 +150,7 @@ export default class TestScene extends Scene {
         labelToRemove.destroy();
         delete this.labels[userIdToDestroy];
       }
+      toast(userNameLeft+" Left")
 
       WebSocketSingleton.removePlayer(userIdToDestroy);
       console.log(`${userNameLeft} has left the space`);
