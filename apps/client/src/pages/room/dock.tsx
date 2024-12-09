@@ -37,7 +37,7 @@ const Dock: React.FC<DockType> = () => {
   const controlBarRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="absolute bottom-2 media left-1/2 transform -translate-x-1/2 bg-[#0008] backdrop-blur-2xl p-2 px-10 flex justify-center rounded-full space-x-4">
+    <div className="absolute bottom-2 z-50 media left-1/2 transform -translate-x-1/2 bg-[#0008] backdrop-blur-2xl p-2 px-10 flex justify-center rounded-full space-x-4">
 
       <div ref={controlBarRef} className="flex items-center space-x-4">
      

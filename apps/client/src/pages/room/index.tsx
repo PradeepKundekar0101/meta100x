@@ -19,10 +19,14 @@ import {
   TrackReference,
 } from "@livekit/components-react";
 import {
-
   Track,
 } from "livekit-client";
+import { useDrag,DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
+
+
 import Preloader from "@/scenes/Preloader";
+import MyVideoConference from "./videoConference";
 const Room: React.FC = () => {
   const wsUrl = import.meta.env.VITE_LIVEKIT_WSS_URL;
   const { roomCode } = useParams();
@@ -170,7 +174,10 @@ const Room: React.FC = () => {
 
           <Dock />
           </div>
+          <DndProvider backend={HTML5Backend}>
+
           <MyVideoConference />
+          </DndProvider>
 
           <RoomAudioRenderer />
         </LiveKitRoom>
@@ -192,35 +199,3 @@ const Room: React.FC = () => {
 
 export default Room;
 
-function MyVideoConference() {
-  const tracks = useTracks(
-    [
-      { source: Track.Source.Camera, withPlaceholder: true },
-      { source: Track.Source.ScreenShare, withPlaceholder: false },
-    ],
-    { onlySubscribed: false }
-  );
-  console.log(tracks)
-  return <div className="absolute top-0 flex flex-col space-y-2 px-1">
-
-    { tracks.map(
-          (track) => 
-            track.publication && (
-              <div
-                key={track.publication.trackSid}
-                className={`w-[200px] relative h-[150px] bg-gray-800 rounded-lg overflow-hidden ${track.participant.isSpeaking?"border-green-300 shadow-green-600 shadow-xl border-2":"border-none"}`}
-
-             >
-                <h1 className="absolute bg-white text-black bottom-3 left-2">{track.participant.identity}</h1>
-                <VideoTrack
-                  trackRef={track as TrackReference}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )
-  
-  
-    )}
-
-  </div>
-}
