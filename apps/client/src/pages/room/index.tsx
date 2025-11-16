@@ -97,7 +97,7 @@ const Room: React.FC = () => {
         toast.error("Game initialization failed");
       }
     },
-    [roomCode]
+    [roomCode],
   );
 
   // const initLiveKitRoom = useCallback(async () => {

@@ -84,6 +84,6 @@ server.listen(8000, async () => {
         console.log(message);
         handleMessages(message);
       }
-    }
+    },
   );
 });

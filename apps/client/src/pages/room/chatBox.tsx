@@ -70,7 +70,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen, roomId }) => {
               userName: user?.userName,
               avatarId: localStorage.getItem("avatarId") || "pajji",
             },
-          })
+          }),
         );
       }
       setInputMessage("");
@@ -93,7 +93,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen, roomId }) => {
             isCurrentUser: userId === user?.id,
           },
         ]);
-      }
+      },
     );
 
     // Return cleanup function to unsubscribe

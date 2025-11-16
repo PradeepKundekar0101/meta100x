@@ -24,11 +24,11 @@ const JoinRoom = () => {
   const { user, token } = useAppSelector((state) => state.auth);
 
   const [roomCode, setRoomCode] = useState<string | undefined>(
-    searchParams.get("roomCode") || ""
+    searchParams.get("roomCode") || "",
   );
   const [roomDetails, setRoomDetails] = useState<any | null>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<string | undefined>(
-    user?.avatarId
+    user?.avatarId,
   );
   const [loading, setLoading] = useState(false);
 
@@ -44,7 +44,7 @@ const JoinRoom = () => {
     try {
       const { data } = await api.get(`/room/code/${roomCode}`);
       setRoomDetails(data.data);
-      console.log(data.data)
+      console.log(data.data);
       toast.success("Room details loaded!");
     } catch (error: any) {
       toast.error("Failed to fetch room details");
@@ -69,7 +69,7 @@ const JoinRoom = () => {
         login({
           user: { ...user!, avatarId: selectedAvatar || "defaultAvatar" },
           token,
-        })
+        }),
       );
       localStorage.setItem("avatarId", selectedAvatar || "");
     },
@@ -101,7 +101,9 @@ const JoinRoom = () => {
           <CardTitle className="text-3xl font-bold text-gray-800">
             Join a Room
           </CardTitle>
-          <CardDescription>Enter the room code or select an avatar</CardDescription>
+          <CardDescription>
+            Enter the room code or select an avatar
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-6">
@@ -127,8 +129,12 @@ const JoinRoom = () => {
                 Room Details
               </h2>
               <p className="text-gray-600">Name: {roomDetails.roomName}</p>
-              <p className="text-gray-600">Creator: {roomDetails.creator.userName}</p>
-              <p className="text-gray-600">Email: {roomDetails.creator.email}</p>
+              <p className="text-gray-600">
+                Creator: {roomDetails.creator.userName}
+              </p>
+              <p className="text-gray-600">
+                Email: {roomDetails.creator.email}
+              </p>
             </div>
           )}
 
@@ -147,7 +153,7 @@ const JoinRoom = () => {
                 >
                   <CardContent className="flex flex-col justify-center items-center p-3">
                     <img
-                      src={"../../"+avatar.thumbnail}
+                      src={"../../" + avatar.thumbnail}
                       alt={avatar.name}
                       className="w-20 h-20 object-cover rounded-full mb-2"
                     />

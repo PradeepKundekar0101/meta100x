@@ -20,40 +20,44 @@ const SignUp = () => {
   } = useForm<TSignUpType>({
     resolver: zodResolver(signUpSchema),
   });
-  let toastId:number|string = ""
+  let toastId: number | string = "";
   const api = useAxios();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch()
+  const dispatch = useAppDispatch();
   const signupMutation = useMutation({
     mutationKey: ["signup"],
     mutationFn: async (data: TSignUpType) => {
-       toastId = toast.loading("Creating Account");
+      toastId = toast.loading("Creating Account");
       const response = await api.post("/auth/signup", data);
       return response.data;
     },
     onSuccess: (data) => {
-      toast.dismiss(toastId)
-      console.log("first")
-      console.log(data)
-      const {id,avatarId, userName,email,createdAt} = data?.data?.user
-      const token = data?.data?.token
-      localStorage.setItem("token",token!)
-      dispatch(login({user:{userName,email,avatarId,id,createdAt},token}))
-      toast.success("Account created successful")
-      navigate("/")
-      reset(); 
+      toast.dismiss(toastId);
+      console.log("first");
+      console.log(data);
+      const { id, avatarId, userName, email, createdAt } = data?.data?.user;
+      const token = data?.data?.token;
+      localStorage.setItem("token", token!);
+      dispatch(
+        login({ user: { userName, email, avatarId, id, createdAt }, token }),
+      );
+      toast.success("Account created successful");
+      navigate("/");
+      reset();
     },
     onError: (error: any) => {
-      toast.dismiss(toastId)
-      console.log(error)
-      toast.error(`signup failed`, error.response?.data.message || error.message);
+      toast.dismiss(toastId);
+      console.log(error);
+      toast.error(
+        `signup failed`,
+        error.response?.data.message || error.message,
+      );
     },
   });
 
   const onSubmit: SubmitHandler<TSignUpType> = (data) => {
     try {
       signupMutation.mutate(data);
-     
     } catch (error) {
       console.error("An unexpected error occurred:", error);
     }
@@ -63,7 +67,7 @@ const SignUp = () => {
     <main className="max-w-md mx-auto mt-10">
       <h1 className="text-2xl font-semibold mb-6">Create Account</h1>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
+        <div>
           <Label htmlFor="userName">Username*</Label>
           <Input
             {...register("userName")}
@@ -72,7 +76,9 @@ const SignUp = () => {
             className="w-full"
           />
           {errors.userName && (
-            <span className="text-red-600 text-sm">{errors.userName.message}</span>
+            <span className="text-red-600 text-sm">
+              {errors.userName.message}
+            </span>
           )}
         </div>
         <div>
@@ -97,15 +103,23 @@ const SignUp = () => {
             className="w-full"
           />
           {errors.password && (
-            <span className="text-red-600 text-sm">{errors.password.message}</span>
+            <span className="text-red-600 text-sm">
+              {errors.password.message}
+            </span>
           )}
         </div>
         <div>
-          <Button type="submit" className="w-full" disabled={signupMutation.isPending}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={signupMutation.isPending}
+          >
             {signupMutation.isPending ? "Logging in..." : "signup"}
           </Button>
         </div>
-        <Link to={"/login"} className=" text-blue-700">Already have an account</Link>
+        <Link to={"/login"} className=" text-blue-700">
+          Already have an account
+        </Link>
         {signupMutation.isError && (
           <p className="text-red-600 text-sm">
             {signupMutation.error?.response?.data?.message ||

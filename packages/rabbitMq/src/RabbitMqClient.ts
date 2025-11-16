@@ -34,7 +34,7 @@ export class RabbitMQLib {
   }
 
   static async dequeue(
-    processMessage: (message: string) => Promise<void>
+    processMessage: (message: string) => Promise<void>,
   ): Promise<void> {
     if (!this.channel) {
       throw new Error("RabbitMQ channel is not initialized.");
@@ -54,7 +54,7 @@ export class RabbitMQLib {
           }
         }
       },
-      { noAck: false }
+      { noAck: false },
     );
   }
 

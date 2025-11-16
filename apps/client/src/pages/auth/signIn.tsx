@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 
 const SignIn = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const {
     formState: { errors },
     register,
@@ -29,7 +29,7 @@ const SignIn = () => {
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Login successful")
+      toast.success("Login successful");
     },
     onError: (error: any) => {
       toast.error("Login failed:", error.response?.data || error.message);
@@ -39,7 +39,7 @@ const SignIn = () => {
   const onSubmit: SubmitHandler<TSignInType> = (data) => {
     try {
       loginMutation.mutate(data);
-      reset(); 
+      reset();
     } catch (error) {
       console.error("An unexpected error occurred:", error);
     }
@@ -71,18 +71,33 @@ const SignIn = () => {
             className="w-full"
           />
           {errors.password && (
-            <span className="text-red-600 text-sm">{errors.password.message}</span>
+            <span className="text-red-600 text-sm">
+              {errors.password.message}
+            </span>
           )}
         </div>
         <div>
-          <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loginMutation.isPending}
+          >
             {loginMutation.isPending ? "Logging in..." : "Login"}
           </Button>
-          <Button onClick={()=>{navigate("/")}} type="button" className=" w-full mt-2" variant={"outline"} >
+          <Button
+            onClick={() => {
+              navigate("/");
+            }}
+            type="button"
+            className=" w-full mt-2"
+            variant={"outline"}
+          >
             <Link to={"/"}>Cancel</Link>
           </Button>
         </div>
-        <Link to={"/signup"} className=" text-blue-700">Don't have an account?</Link>
+        <Link to={"/signup"} className=" text-blue-700">
+          Don't have an account?
+        </Link>
 
         {loginMutation.isError && (
           <p className="text-red-600 text-sm">

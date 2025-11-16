@@ -6,11 +6,7 @@ import {
   TrackReference,
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
-import { 
-  Move, 
-  Minimize2, 
-  Maximize2 
-} from "lucide-react";
+import { Move, Minimize2, Maximize2 } from "lucide-react";
 
 const MyVideoConference = () => {
   const tracks = useTracks(
@@ -18,14 +14,14 @@ const MyVideoConference = () => {
       { source: Track.Source.Camera, withPlaceholder: true },
       { source: Track.Source.ScreenShare, withPlaceholder: false },
     ],
-    { onlySubscribed: false }
+    { onlySubscribed: false },
   );
 
   // Persist positions and sizes
   const [videoStates, setVideoStates] = useState(() => {
-    const savedStates = localStorage.getItem('videoStates');
-    return savedStates 
-      ? JSON.parse(savedStates) 
+    const savedStates = localStorage.getItem("videoStates");
+    return savedStates
+      ? JSON.parse(savedStates)
       : tracks.map((track, index) => ({
           id: track.participant.sid,
           x: 20 * index,
@@ -37,44 +33,50 @@ const MyVideoConference = () => {
 
   // Update localStorage whenever video states change
   useEffect(() => {
-    localStorage.setItem('videoStates', JSON.stringify(videoStates));
+    localStorage.setItem("videoStates", JSON.stringify(videoStates));
   }, [videoStates]);
 
   // Update states if tracks change
   useEffect(() => {
-    setVideoStates((currentStates: { map: (arg0: (state: any) => any[]) => Iterable<readonly [unknown, unknown]> | null | undefined; }) => {
-      const existingStatesMap = new Map(
-        currentStates.map(state => [state.id, state])
-      );
+    setVideoStates(
+      (currentStates: {
+        map: (
+          arg0: (state: any) => any[],
+        ) => Iterable<readonly [unknown, unknown]> | null | undefined;
+      }) => {
+        const existingStatesMap = new Map(
+          currentStates.map((state) => [state.id, state]),
+        );
 
-      const newStates = tracks.map(track => {
-        const existingState = existingStatesMap.get(track.participant.sid);
-        return existingState || {
-          id: track.participant.sid,
-          x: 20 * tracks.indexOf(track),
-          y: 20 * tracks.indexOf(track),
-          width: 200,
-          height: 150,
-        };
-      });
+        const newStates = tracks.map((track) => {
+          const existingState = existingStatesMap.get(track.participant.sid);
+          return (
+            existingState || {
+              id: track.participant.sid,
+              x: 20 * tracks.indexOf(track),
+              y: 20 * tracks.indexOf(track),
+              width: 200,
+              height: 150,
+            }
+          );
+        });
 
-      return newStates;
-    });
+        return newStates;
+      },
+    );
   }, [tracks]);
 
   const moveBox = (id: string, x: number, y: number) => {
     setVideoStates((prev: any[]) =>
-      prev.map((state) =>
-        state.id === id ? { ...state, x, y } : state
-      )
+      prev.map((state) => (state.id === id ? { ...state, x, y } : state)),
     );
   };
 
   const resizeBox = (id: string, width: number, height: number) => {
     setVideoStates((prev: any[]) =>
       prev.map((state) =>
-        state.id === id ? { ...state, width, height } : state
-      )
+        state.id === id ? { ...state, width, height } : state,
+      ),
     );
   };
 
@@ -82,7 +84,7 @@ const MyVideoConference = () => {
     <div className="absolute top-0 left-0 w-full h-full">
       {tracks.map((track) => {
         const state = videoStates.find(
-          (state: { id: string; }) => state.id === track.participant.sid
+          (state: { id: string }) => state.id === track.participant.sid,
         );
         return (
           track.publication && (
@@ -141,7 +143,7 @@ const DraggableResizableVideo = ({
         const newY = y + delta.y;
         onMove(track.participant.sid, newX, newY);
       }
-    }
+    },
   });
 
   // Resizing logic
@@ -162,7 +164,7 @@ const DraggableResizableVideo = ({
         const newHeight = Math.max(100, Math.round(height + delta.y));
         onResize(track.participant.sid, newWidth, newHeight);
       }
-    }
+    },
   });
 
   // Enable dragging and dropping
@@ -182,7 +184,7 @@ const DraggableResizableVideo = ({
         width,
         height,
         opacity: isDragging ? 0.5 : 1,
-        transition: 'opacity 0.2s ease',
+        transition: "opacity 0.2s ease",
       }}
       className={`bg-gray-800 rounded-lg overflow-hidden relative group ${
         track.participant.isSpeaking
@@ -191,7 +193,7 @@ const DraggableResizableVideo = ({
       }`}
     >
       {/* Drag Handle */}
-      <div 
+      <div
         className="absolute top-1 left-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/30 rounded-full p-1 cursor-move"
         title="Drag to move"
       >
@@ -204,11 +206,8 @@ const DraggableResizableVideo = ({
       </h1>
 
       {/* Video Track */}
-      <VideoTrack
-        trackRef={track}
-        className="w-full h-full object-cover"
-      />
-      
+      <VideoTrack trackRef={track} className="w-full h-full object-cover" />
+
       {/* Resize Handle */}
       <div
         ref={resizeRef}

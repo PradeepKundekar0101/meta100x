@@ -37,7 +37,7 @@ export class User {
                 JSON.stringify({
                   type: "error",
                   message: "No room id or token",
-                })
+                }),
               );
               this.ws.close();
             }
@@ -47,7 +47,7 @@ export class User {
                 JSON.stringify({
                   type: "error",
                   message: "Invalid token",
-                })
+                }),
               );
               this.ws.close();
             }
@@ -60,7 +60,7 @@ export class User {
                 JSON.stringify({
                   type: "error",
                   message: "User not found",
-                })
+                }),
               );
               this.ws.close();
               return;
@@ -73,7 +73,7 @@ export class User {
                 JSON.stringify({
                   type: "error",
                   message: "Room not found",
-                })
+                }),
               );
               this.ws.close();
               return;
@@ -98,11 +98,11 @@ export class User {
                   x: this.playerX,
                   y: this.playerY,
                 },
-              })
+              }),
             );
             const liveKitAccessToken = await generateToken(
               this.roomCode,
-              this.user.userName!
+              this.user.userName!,
             );
             this.sendMessage(
               JSON.stringify({
@@ -111,7 +111,7 @@ export class User {
                   userId: this.id,
                   liveKitAccessToken,
                   users: Array.from(
-                    RoomManager.getInstance().rooms?.get(roomId) || []
+                    RoomManager.getInstance().rooms?.get(roomId) || [],
                   )
                     .filter((e) => e.id != this.id)
                     .map((e) => {
@@ -124,7 +124,7 @@ export class User {
                       };
                     }),
                 },
-              })
+              }),
             );
             break;
 
@@ -135,7 +135,7 @@ export class User {
                 JSON.stringify({
                   type: "error",
                   payload: { message: "Invalid move coordinates" },
-                })
+                }),
               );
               return;
             }
@@ -156,7 +156,7 @@ export class User {
                   xPos: this.playerX,
                   yPos: this.playerY,
                 },
-              })
+              }),
             );
 
             break;
@@ -173,7 +173,7 @@ export class User {
                 JSON.stringify({
                   type: "ERROR",
                   message: "Invalid token",
-                })
+                }),
               );
               this.ws.close();
             }
@@ -195,14 +195,14 @@ export class User {
                 roomCode: this.roomCode,
                 type: EventTypes.Server.CHAT_MESSAGE_SERVER,
                 payload: payloadToSend,
-              })
+              }),
             );
             RabbitMQLib.enqueue(JSON.stringify(payloadToSend));
             this.sendMessage(
               JSON.stringify({
                 type: EventTypes.Server.CHAT_MESSAGE_SERVER,
                 payload: payloadToSend,
-              })
+              }),
             );
         }
       } catch (error) {
@@ -210,7 +210,7 @@ export class User {
           JSON.stringify({
             type: "error",
             payload: { message: "Invalid data" },
-          })
+          }),
         );
       }
     });
@@ -235,7 +235,7 @@ export class User {
               id: this.id,
               userName: this.user?.userName,
             },
-          })
+          }),
         );
       }
     });

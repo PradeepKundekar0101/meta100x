@@ -18,5 +18,5 @@ createRoot(document.getElementById("root")!).render(
         <Toaster />
       </QueryClientProvider>
     </Provider>
-  </ErrorBoundary>
+  </ErrorBoundary>,
 );

@@ -1,130 +1,134 @@
-import React from 'react'
-import { Button } from '@/components/ui/button'
-import { Edit, Trash2 } from 'lucide-react'
-import { Switch } from '@/components/ui/switch'
-import useAxios from "@/hooks/use-axios"
-import { useAppSelector } from "@/store/hooks"
-import { Space } from "@/types"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useToast } from "@/hooks/use-toast"
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import useAxios from "@/hooks/use-axios";
+import { useAppSelector } from "@/store/hooks";
+import { Space } from "@/types";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 const MyRooms = () => {
-  const { toast } = useToast()
+  const { toast } = useToast();
 
-  const api = useAxios()
-  const queryClient = useQueryClient()
-  const { user } = useAppSelector((state) => state.auth)
+  const api = useAxios();
+  const queryClient = useQueryClient();
+  const { user } = useAppSelector((state) => state.auth);
 
   // Fetch Spaces
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["myspaces"],
     queryFn: async () => {
-      return (await api.get(`/room/user/${user?.id}`)).data
-    }
-  })
+      return (await api.get(`/room/user/${user?.id}`)).data;
+    },
+  });
 
   // Delete Space Mutation
   const deleteMutation = useMutation({
     mutationFn: async (spaceId: string) => {
-      return await api.delete(`/room/${spaceId}`)
+      return await api.delete(`/room/${spaceId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["myspaces"] })
+      queryClient.invalidateQueries({ queryKey: ["myspaces"] });
       toast({
         title: "Space Deleted",
-        description: "The space has been successfully removed."
-      })
+        description: "The space has been successfully removed.",
+      });
     },
     onError: () => {
       toast({
         title: "Error",
         description: "Failed to delete the space.",
-        variant: "destructive"
-      })
-    }
-  })
+        variant: "destructive",
+      });
+    },
+  });
 
   // Edit Space Mutation
   const editMutation = useMutation({
-    mutationFn: async ({ spaceId, roomName }: { spaceId: string, roomName: string }) => {
-      return await api.patch(`/room/${spaceId}`, { roomName })
+    mutationFn: async ({
+      spaceId,
+      roomName,
+    }: {
+      spaceId: string;
+      roomName: string;
+    }) => {
+      return await api.patch(`/room/${spaceId}`, { roomName });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["myspaces"] })
+      queryClient.invalidateQueries({ queryKey: ["myspaces"] });
       toast({
         title: "Space Updated",
-        description: "The space details have been successfully updated."
-      })
+        description: "The space details have been successfully updated.",
+      });
     },
     onError: () => {
       toast({
         title: "Error",
         description: "Failed to update the space.",
-        variant: "destructive"
-      })
-    }
-  })
+        variant: "destructive",
+      });
+    },
+  });
 
   // Toggle Active Status Mutation
   const toggleActiveMutation = useMutation({
     mutationFn: async (spaceId: string) => {
-      return await api.put(`/room/toggleActive/${spaceId}`)
+      return await api.put(`/room/toggleActive/${spaceId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["myspaces"] })
+      queryClient.invalidateQueries({ queryKey: ["myspaces"] });
       toast({
         title: "Space Status Updated",
-        description: "The space active status has been changed."
-      })
+        description: "The space active status has been changed.",
+      });
     },
     onError: () => {
       toast({
         title: "Error",
         description: "Failed to update space status.",
-        variant: "destructive"
-      })
-    }
-  })
+        variant: "destructive",
+      });
+    },
+  });
 
   // Create Space Dialog Component
   const CreateSpaceDialog = () => {
-    const [roomName, setRoomName] = React.useState('')
+    const [roomName, setRoomName] = React.useState("");
 
     const handleCreate = async () => {
       try {
-        await api.post('/room', { 
-          roomName, 
-          creatorId: user?.id 
-        })
-        queryClient.invalidateQueries({ queryKey: ["myspaces"] })
+        await api.post("/room", {
+          roomName,
+          creatorId: user?.id,
+        });
+        queryClient.invalidateQueries({ queryKey: ["myspaces"] });
         toast({
           title: "Space Created",
-          description: "A new space has been successfully added."
-        })
-        setRoomName('')
+          description: "A new space has been successfully added.",
+        });
+        setRoomName("");
       } catch (error) {
         toast({
           title: "Error",
           description: "Failed to create a new space.",
-          variant: "destructive"
-        })
+          variant: "destructive",
+        });
       }
-    }
+    };
 
     return (
       <Dialog>
-        <DialogTrigger asChild>
-         
-        </DialogTrigger>
+        <DialogTrigger asChild></DialogTrigger>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Space</DialogTitle>
@@ -134,30 +138,30 @@ const MyRooms = () => {
               <Label htmlFor="roomName" className="text-right">
                 Space Name
               </Label>
-              <Input 
-                id="roomName" 
+              <Input
+                id="roomName"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
-                className="col-span-3" 
+                className="col-span-3"
               />
             </div>
           </div>
           <Button onClick={handleCreate}>Create Space</Button>
         </DialogContent>
       </Dialog>
-    )
-  }
+    );
+  };
 
   // Edit Space Dialog Component
   const EditSpaceDialog = ({ space }: { space: Space }) => {
-    const [roomName, setRoomName] = React.useState(space.roomName)
+    const [roomName, setRoomName] = React.useState(space.roomName);
 
     const handleEdit = () => {
-      editMutation.mutate({ 
-        spaceId: space.id, 
-        roomName 
-      })
-    }
+      editMutation.mutate({
+        spaceId: space.id,
+        roomName,
+      });
+    };
 
     return (
       <Dialog>
@@ -175,22 +179,22 @@ const MyRooms = () => {
               <Label htmlFor="editRoomName" className="text-right">
                 Space Name
               </Label>
-              <Input 
-                id="editRoomName" 
+              <Input
+                id="editRoomName"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
-                className="col-span-3" 
+                className="col-span-3"
               />
             </div>
           </div>
           <Button onClick={handleEdit}>Save Changes</Button>
         </DialogContent>
       </Dialog>
-    )
-  }
+    );
+  };
 
-  if (isLoading) return <div>Loading spaces...</div>
-  if (isError) return <div>Error loading spaces: {error.message}</div>
+  if (isLoading) return <div>Loading spaces...</div>;
+  if (isError) return <div>Error loading spaces: {error.message}</div>;
 
   return (
     <main className="container mx-auto px-4 py-6">
@@ -198,7 +202,7 @@ const MyRooms = () => {
         <h1 className="text-2xl font-bold">My Spaces</h1>
         <CreateSpaceDialog />
       </div>
-      
+
       {data?.data && data.data.length === 0 ? (
         <div className="text-center text-gray-500">
           You haven't created any spaces yet.
@@ -206,21 +210,25 @@ const MyRooms = () => {
       ) : (
         <div className="space-y-4">
           {data?.data.map((space: Space) => (
-            <div 
-              key={space.id} 
+            <div
+              key={space.id}
               className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
             >
               <div className="flex-grow">
                 <div className="flex items-center space-x-4">
                   <div>
                     <h3 className="text-lg font-semibold">{space.roomName}</h3>
-                    <p className="text-sm text-muted-foreground">Space Code: {space.roomCode}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Space Code: {space.roomCode}
+                    </p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-sm">Active:</span>
                     <Switch
                       checked={space.isActive}
-                      onCheckedChange={() => toggleActiveMutation.mutate(space.id)}
+                      onCheckedChange={() =>
+                        toggleActiveMutation.mutate(space.id)
+                      }
                     />
                   </div>
                 </div>
@@ -230,8 +238,8 @@ const MyRooms = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <EditSpaceDialog space={space} />
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   size="icon"
                   onClick={() => deleteMutation.mutate(space.id)}
                 >
@@ -243,7 +251,7 @@ const MyRooms = () => {
         </div>
       )}
     </main>
-  )
-}
+  );
+};
 
-export default MyRooms
+export default MyRooms;

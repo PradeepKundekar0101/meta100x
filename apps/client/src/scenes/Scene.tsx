@@ -50,7 +50,7 @@ export default class TestScene extends Scene {
             roomId,
             token,
           },
-        })
+        }),
       );
     } else {
       this.socket.addEventListener("open", () => {
@@ -61,7 +61,7 @@ export default class TestScene extends Scene {
               roomId,
               token,
             },
-          })
+          }),
         );
       });
     }
@@ -93,7 +93,7 @@ export default class TestScene extends Scene {
 
         this.labels[msg.payload.userId] = label;
         toast("Space joined successfully");
-      }
+      },
     );
 
     this.userJoinedUnsubscribe = WebSocketSingleton.subscribe(
@@ -102,7 +102,7 @@ export default class TestScene extends Scene {
         const { id, x, y, userName, avatarId } = msg.payload;
         WebSocketSingleton.setPlayers({ userName, avatarId, userId: id });
         this.addPlayer(id, x, y, userName, avatarId);
-      }
+      },
     );
 
     this.movementUnsubscribe = WebSocketSingleton.subscribe(
@@ -147,7 +147,7 @@ export default class TestScene extends Scene {
               player.body.x + 16,
               player.body.y + 32,
               targetX,
-              targetY
+              targetY,
             );
             const duration = (dis / 100) * 1000;
 
@@ -178,7 +178,7 @@ export default class TestScene extends Scene {
             this.playerTweens[userId] = newTween;
           }
         }
-      }
+      },
     );
 
     this.userLeftUnsubscribe = WebSocketSingleton.subscribe(
@@ -212,7 +212,7 @@ export default class TestScene extends Scene {
 
         WebSocketSingleton.removePlayer(userIdToDestroy);
         console.log(`${userNameLeft} has left the space`);
-      }
+      },
     );
   }
 
@@ -222,7 +222,7 @@ export default class TestScene extends Scene {
     const map = this.make.tilemap({ key: "map" });
     const tileset = map.addTilesetImage(
       "tuxmon-sample-32px-extruded",
-      "tuxmon-sample-32px-extruded"
+      "tuxmon-sample-32px-extruded",
     );
     map.createLayer("Below Player", tileset!, 0, 0);
     this.worldLayer = map.createLayer("World", tileset!, 0, 0);
@@ -233,7 +233,7 @@ export default class TestScene extends Scene {
       450,
       1000,
       avatarId,
-      avatarId + "000"
+      avatarId + "000",
     );
 
     this.physics.add.collider(this.player, this.worldLayer!);
@@ -310,7 +310,7 @@ export default class TestScene extends Scene {
             xPos: this.player.body.x,
             yPos: this.player.body.y,
           },
-        })
+        }),
       );
     }
 
@@ -344,7 +344,7 @@ export default class TestScene extends Scene {
     x: number,
     y: number,
     userName: string,
-    avatarId: string
+    avatarId: string,
   ) {
     const newPlayer = this.physics.add.sprite(x, y, avatarId);
     this.players[playerId] = newPlayer;

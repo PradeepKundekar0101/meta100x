@@ -12,7 +12,7 @@ import {
 import { PlusCircle, User2Icon } from "lucide-react";
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
-  const {  token } = useAppSelector((state) => state.auth);
+  const { token } = useAppSelector((state) => state.auth);
 
   return (
     <div className=" ">
@@ -43,14 +43,12 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
           ) : (
             <>
               <li>
-             
                 <Link
                   className=" flex space-x-3  items-center bg-primaryBlue text-white px-4 py-2 rounded-md"
                   to={"/createroom"}
                 >
-                 <PlusCircle className=" h-5 w-5 " /><span>
-                  Create Space
-                  </span> 
+                  <PlusCircle className=" h-5 w-5 " />
+                  <span>Create Space</span>
                 </Link>
               </li>
               <li>
