@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import useAxios from "@/hooks/use-axios";
 import { ChevronLeft, Settings } from "lucide-react";
 // import { getScene } from "@/utils/getScene";
-import MainScene from "@/scenes/Scene"
+import MainScene from "@/scenes/Scene";
 import ChatBox from "./chatBox";
 import Dock from "./dock";
 import { WebSocketSingleton } from "@/utils/websocket";
@@ -18,12 +18,9 @@ import {
   VideoTrack,
   TrackReference,
 } from "@livekit/components-react";
-import {
-  Track,
-} from "livekit-client";
-import { useDrag,DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
-
+import { Track } from "livekit-client";
+import { useDrag, DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 import Preloader from "@/scenes/Preloader";
 import MyVideoConference from "./videoConference";
@@ -35,8 +32,8 @@ const Room: React.FC = () => {
   const api = useAxios();
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [livekitToken, setLivekitToken] = useState<string>();
-//   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
-// const [isVideoEnabled, setIsVideoEnabled] = useState(false);
+  //   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+  // const [isVideoEnabled, setIsVideoEnabled] = useState(false);
 
   const { data, error, isError, isLoading } = useQuery({
     queryKey: ["room", roomCode],
@@ -61,7 +58,7 @@ const Room: React.FC = () => {
       };
 
       ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
+        console.log("WebSocket error:", error);
         toast.error("WebSocket connection failed", { position: "bottom-left" });
       };
 
@@ -80,7 +77,7 @@ const Room: React.FC = () => {
         new Phaser.Game({
           type: Phaser.AUTO,
           title: roomCode,
-          scene: [Preloader,MainScene],
+          scene: [Preloader, MainScene],
           parent: "game-content",
           width: window.innerWidth,
           height: window.innerHeight,
@@ -95,7 +92,6 @@ const Room: React.FC = () => {
           },
           backgroundColor: "#000",
         });
-       
       } catch (error) {
         console.error("Failed to initialize Phaser", error);
         toast.error("Game initialization failed");
@@ -130,12 +126,9 @@ const Room: React.FC = () => {
     };
   }, []);
 
-
-
   const toggleChat = () => setIsChatOpen(!isChatOpen);
 
   const openSettings = () => {
-
     console.log("Open Room Settings");
   };
 
@@ -145,45 +138,37 @@ const Room: React.FC = () => {
 
   return (
     <div className="flex relative h-screen ">
-     
-          
       <div className="flex-grow relative bg-blue-500">
-      <LiveKitRoom
-
+        <LiveKitRoom
           audio={false}
-  video={false}
+          video={false}
           token={livekitToken}
           serverUrl={wsUrl}
           data-lk-theme="default"
           className=" absolute "
         >
-          <div id="game-content" className=" w-full" >
+          <div id="game-content" className=" w-full">
+            {data?.data && (
+              <div className="absolute top-4 left-4 bg-black/50 text-white p-2 rounded flex items-center space-x-2">
+                <h1 className="text-xl font-semibold">{data.data.roomName}</h1>
+                <button
+                  onClick={openSettings}
+                  className="hover:bg-white/20 p-1 rounded-full"
+                >
+                  <Settings size={16} />
+                </button>
+              </div>
+            )}
 
-          {data?.data && (
-            <div className="absolute top-4 left-4 bg-black/50 text-white p-2 rounded flex items-center space-x-2">
-              <h1 className="text-xl font-semibold">{data.data.roomName}</h1>
-              <button
-                onClick={openSettings}
-                className="hover:bg-white/20 p-1 rounded-full"
-              >
-                <Settings size={16} />
-              </button>
-            </div>
-          )}
-
-
-          <Dock />
+            <Dock />
           </div>
           <DndProvider backend={HTML5Backend}>
-
-          <MyVideoConference />
+            <MyVideoConference />
           </DndProvider>
 
           <RoomAudioRenderer />
         </LiveKitRoom>
-          
       </div>
-      
 
       {data?.data && <ChatBox isChatOpen={isChatOpen} roomId={data.data.id} />}
 
@@ -198,4 +183,3 @@ const Room: React.FC = () => {
 };
 
 export default Room;
-

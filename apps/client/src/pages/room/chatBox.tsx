@@ -1,99 +1,101 @@
-import React, { useEffect, useState, useRef } from 'react'
-import { Send } from "lucide-react"
-import { useAppSelector } from '@/store/hooks'
+import React, { useEffect, useState, useRef } from "react";
+import { Send } from "lucide-react";
+import { useAppSelector } from "@/store/hooks";
 
-import { Avatar, AvatarImage } from '@/components/ui/avatar'
-import {WebSocketSingleton} from '@/utils/websocket'
-import { useQuery } from '@tanstack/react-query'
-import useAxios from '@/hooks/use-axios'
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { WebSocketSingleton } from "@/utils/websocket";
+import { useQuery } from "@tanstack/react-query";
+import useAxios from "@/hooks/use-axios";
 
 interface ChatBoxProps {
-  isChatOpen: boolean
-  roomId:string
+  isChatOpen: boolean;
+  roomId: string;
 }
 
 interface Message {
-  id: string
-  content: string
-  userName: string
-  createdAt: string
-  avatarId: string
-  isCurrentUser: boolean
+  id: string;
+  content: string;
+  userName: string;
+  createdAt: string;
+  avatarId: string;
+  isCurrentUser: boolean;
 }
 
-const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen,roomId }) => {
-
-  const { user, token } = useAppSelector((state) => state.auth)
+const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen, roomId }) => {
+  const { user, token } = useAppSelector((state) => state.auth);
 
   // const socket = WebSocketSingleton.getInstance()
-  const api = useAxios()
-  const [messages, setMessages] = useState<Message[]>([])
-  const [inputMessage, setInputMessage] = useState("")
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const {data} = useQuery({
-    queryKey:["chats"],
-    queryFn: async()=>{
-      return (await api.get("/chats/"+roomId)).data
-    }
-  })
+  const api = useAxios();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { data } = useQuery({
+    queryKey: ["chats"],
+    queryFn: async () => {
+      return (await api.get("/chats/" + roomId)).data;
+    },
+  });
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-  
-  useEffect(() => {
-    scrollToBottom()
-   
-  }, [messages])
-  useEffect(()=>{
-    if(data && data.data){
-      const msg :Message[]= []
-      data.data.chats.forEach((e:any)=>{
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+  useEffect(() => {
+    if (data && data.data) {
+      const msg: Message[] = [];
+      data.data.chats.forEach((e: any) => {
         msg.push({
           userName: e.sender.userName,
           avatarId: e.sender.avatarId,
           createdAt: e.createdAt,
           content: e.content,
           id: e.sender.id,
-          isCurrentUser: e.sender.id===user?.id
-        })
-      })
-      setMessages(msg)
+          isCurrentUser: e.sender.id === user?.id,
+        });
+      });
+      setMessages(msg);
     }
-  },[data])
+  }, [data]);
   const handleSendMessage = () => {
     if (inputMessage.trim()) {
       if (WebSocketSingleton.getInstance().readyState === WebSocket.OPEN) {
-        WebSocketSingleton.getInstance().send(JSON.stringify({
-          type: "CHAT_MESSAGE_CLIENT",
-          payload: {
-            token,
-            content: inputMessage,
-            userName: user?.userName,
-            avatarId: localStorage.getItem("avatarId") || "pajji"
-          }
-        }))
+        WebSocketSingleton.getInstance().send(
+          JSON.stringify({
+            type: "CHAT_MESSAGE_CLIENT",
+            payload: {
+              token,
+              content: inputMessage,
+              userName: user?.userName,
+              avatarId: localStorage.getItem("avatarId") || "pajji",
+            },
+          })
+        );
       }
-      setInputMessage("")
+      setInputMessage("");
     }
-  }
+  };
   useEffect(() => {
-    const chatMessageUnsubscribe = WebSocketSingleton.subscribe('CHAT_MESSAGE_SERVER', (msg) => {
-      const { avatarId, userName, createdAt, content, userId } = msg.payload;
-      console.log(msg)
-      setMessages(prevMessages => [
-        ...prevMessages,
-        {
-          id: String(Date.now()),
-          content,
-          userName: userId === user?.id ? "You" : userName,
-          createdAt,
-          avatarId,
-          isCurrentUser: userId === user?.id
-        }
-      ]);
-    });
-  
+    const chatMessageUnsubscribe = WebSocketSingleton.subscribe(
+      "CHAT_MESSAGE_SERVER",
+      (msg) => {
+        const { avatarId, userName, createdAt, content, userId } = msg.payload;
+        console.log(msg);
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            id: String(Date.now()),
+            content,
+            userName: userId === user?.id ? "You" : userName,
+            createdAt,
+            avatarId,
+            isCurrentUser: userId === user?.id,
+          },
+        ]);
+      }
+    );
+
     // Return cleanup function to unsubscribe
     return () => {
       chatMessageUnsubscribe();
@@ -107,23 +109,23 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen,roomId }) => {
     >
       <div className="flex-grow overflow-y-auto p-4 space-y-4 h-[calc(100%-100px)]">
         {messages.map((message) => (
-          <div 
-            key={message.id} 
+          <div
+            key={message.id}
             className={`flex items-start space-x-2 ${
-              message.isCurrentUser ? 'flex-row-reverse space-x-reverse' : ''
+              message.isCurrentUser ? "flex-row-reverse space-x-reverse" : ""
             }`}
           >
             <Avatar className="w-8 h-8 bg-blue-600">
-              <AvatarImage 
-                src={`../../public/avatar_thumbnail/${message.avatarId}.png`} 
-                alt={message.userName} 
+              <AvatarImage
+                src={`/avatar_thumbnail/${message.avatarId}.png`}
+                alt={message.userName}
               />
             </Avatar>
-            <div 
+            <div
               className={`p-2 rounded-lg max-w-[70%] ${
-                message.isCurrentUser 
-                  ? 'bg-blue-600 text-white self-end' 
-                  : 'bg-gray-200 text-black self-start'
+                message.isCurrentUser
+                  ? "bg-blue-600 text-white self-end"
+                  : "bg-gray-200 text-black self-start"
               }`}
             >
               <p className="text-sm font-semibold mb-1">{message.userName}</p>
@@ -152,7 +154,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen,roomId }) => {
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ChatBox
+export default ChatBox;

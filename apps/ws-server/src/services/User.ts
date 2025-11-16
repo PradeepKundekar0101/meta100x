@@ -24,7 +24,6 @@ export class User {
     this.ws.send(message);
   };
   initHandler = () => {
-    
     this.ws.on("message", async (data) => {
       try {
         const { type, payload }: { type: UserEvents; payload: any } =
@@ -32,7 +31,7 @@ export class User {
         switch (type) {
           case "JOIN_SPACE":
             const { roomId, token } = payload;
-            console.log("JOIN_SPACE")
+            console.log("JOIN_SPACE");
             if (!roomId || !token) {
               this.sendMessage(
                 JSON.stringify({
@@ -83,14 +82,14 @@ export class User {
             const { userName, id, avatarId } = userFromDb;
             this.user = { userName, id, avatarId: avatarId! };
             this.roomCode = roomId;
-            (this.playerX = 390),
-              (this.playerY = 1260),
-              RoomManager.getInstance().addUser(this, roomId);
+            this.playerX = 450;
+            this.playerY = 1000;
+            RoomManager.getInstance().addUser(this, roomId);
             RedisClient.getPublisher().publish(
               "MESSAGE",
               JSON.stringify({
-                userId:this.id,
-                roomCode:this.roomCode,
+                userId: this.id,
+                roomCode: this.roomCode,
                 type: EventTypes.Server.USER_JOINED,
                 payload: {
                   id: this.id,
@@ -101,7 +100,10 @@ export class User {
                 },
               })
             );
-            const liveKitAccessToken = await generateToken(this.roomCode,this.user.userName!)
+            const liveKitAccessToken = await generateToken(
+              this.roomCode,
+              this.user.userName!
+            );
             this.sendMessage(
               JSON.stringify({
                 type: EventTypes.Server.SPACE_JOINED,
@@ -119,7 +121,6 @@ export class User {
                         y: e.playerY,
                         userName: e.user?.userName!,
                         avatarId: e.user?.avatarId!,
-                        
                       };
                     }),
                 },
@@ -145,8 +146,8 @@ export class User {
             RedisClient.getPublisher().publish(
               "MESSAGE",
               JSON.stringify({
-                userId:this.id,
-                roomCode:this.roomCode,
+                userId: this.id,
+                roomCode: this.roomCode,
                 type: EventTypes.Server.MOVEMENT,
                 payload: {
                   userId: this.id!,
@@ -190,8 +191,8 @@ export class User {
             RedisClient.getPublisher().publish(
               "MESSAGE",
               JSON.stringify({
-                userId:this.id,
-                roomCode:this.roomCode,
+                userId: this.id,
+                roomCode: this.roomCode,
                 type: EventTypes.Server.CHAT_MESSAGE_SERVER,
                 payload: payloadToSend,
               })
@@ -227,8 +228,8 @@ export class User {
         RedisClient.getPublisher().publish(
           "MESSAGE",
           JSON.stringify({
-            userId:this.id,
-            roomCode:this.roomCode,
+            userId: this.id,
+            roomCode: this.roomCode,
             type: EventTypes.Server.USER_LEFT,
             payload: {
               id: this.id,
@@ -236,7 +237,6 @@ export class User {
             },
           })
         );
-        
       }
     });
   };

@@ -13,10 +13,15 @@ export default class TestScene extends Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private userId: string | undefined;
   private worldLayer: Phaser.Tilemaps.TilemapLayer | undefined | null;
-  private players: Record<string, Phaser.Types.Physics.Arcade.SpriteWithDynamicBody>;
+  private players: Record<
+    string,
+    Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
+  >;
   private labels: Record<string, Phaser.GameObjects.Text>;
   private socket: WebSocket | null;
-
+  private playerTweens: Record<string, Phaser.Tweens.Tween>;
+  private playerLastAnimations: Record<string, string>;
+  private currentPlayerLastAnimation: string;
   // Unsubscribe functions to clean up listeners
   private spaceJoinedUnsubscribe?: () => void;
   private movementUnsubscribe?: () => void;
@@ -28,10 +33,12 @@ export default class TestScene extends Scene {
     this.players = {};
     this.labels = {};
     this.socket = null;
+    this.playerTweens = {};
+    this.playerLastAnimations = {};
+    this.currentPlayerLastAnimation = "";
   }
 
-  preload() {
-  }
+  preload() {}
 
   private setupWebSocket() {
     this.socket = WebSocketSingleton.getInstance();
@@ -46,7 +53,7 @@ export default class TestScene extends Scene {
         })
       );
     } else {
-      this.socket.addEventListener('open', () => {
+      this.socket.addEventListener("open", () => {
         this.socket?.send(
           JSON.stringify({
             type: "JOIN_SPACE",
@@ -60,102 +67,153 @@ export default class TestScene extends Scene {
     }
 
     // Subscribe to different message types
-    this.spaceJoinedUnsubscribe = WebSocketSingleton.subscribe('SPACE_JOINED', (msg) => {
-      LiveKitClient.setToken(msg.payload.liveKitAccessToken!)
-      this.userId = msg.payload.userId;
-      
-      if (Array.isArray(msg.payload.users)) {
-        msg.payload.users.forEach((e: any) => {
-          const { id, x, y, userName, avatarId } = e;
-          WebSocketSingleton.setPlayers({userName, avatarId, userId: id});
-          this.addPlayer(id, x, y, userName, avatarId);
-        });
-      }
+    this.spaceJoinedUnsubscribe = WebSocketSingleton.subscribe(
+      "SPACE_JOINED",
+      (msg) => {
+        LiveKitClient.setToken(msg.payload.liveKitAccessToken!);
+        this.userId = msg.payload.userId;
 
-      // Add label for current user
-      const label = this.add
-        .text(390, 1260, `YOU`, {
-          fontSize: "12px",
-          color: "#000",
-          backgroundColor: "#fff",
-          padding: { x: 4, y: 2 },
-        })
-        .setOrigin(1.5);
-      
-      this.labels[msg.payload.userId] = label;
-      toast("Space joined successfully");
-    });
-
-    this.userJoinedUnsubscribe = WebSocketSingleton.subscribe('USER_JOINED', (msg) => {
-      const { id, x, y, userName, avatarId } = msg.payload;
-      WebSocketSingleton.setPlayers({userName, avatarId, userId: id});
-      this.addPlayer(id, x, y, userName, avatarId);
-    });
-
-    this.movementUnsubscribe = WebSocketSingleton.subscribe('MOVEMENT', (msg) => {
-      console.log("MV")
-      const {
-        userId,
-        x: velocityX,
-        y: velocityY,
-        xPos: targetX,
-        yPos: targetY,
-      } = msg.payload;
-
-      const player = this.players[userId];
-      console.log(player)
-      if (player) {
-        const dis = Phaser.Math.Distance.Between(
-          player.body.x + 16,
-          player.body.y + 32,
-          targetX,
-          targetY
-        );
-        const duration = (dis / 100) * 1000;
-        let animationKey = "";
-        const texturekey = player.texture.key;
-
-        if (velocityX < 0) animationKey = `${texturekey}-left`;
-        else if (velocityX > 0) animationKey = `${texturekey}-right`;
-        else if (velocityY < 0) animationKey = `${texturekey}-back`;
-        else if (velocityY > 0) animationKey = `${texturekey}-front`;
-
-        if (!player.anims.isPlaying) {
-          player.anims.play(animationKey);
+        if (Array.isArray(msg.payload.users)) {
+          msg.payload.users.forEach((e: any) => {
+            const { id, x, y, userName, avatarId } = e;
+            WebSocketSingleton.setPlayers({ userName, avatarId, userId: id });
+            this.addPlayer(id, x, y, userName, avatarId);
+          });
         }
 
-        this.tweens.add({
-          targets: player,
-          x: targetX + 16,
-          y: targetY + 32,
-          duration,
-          ease: "Linear",
-          onComplete: () => {
-            player.anims.stop();
-          },
-        });
+        // Add label for current user
+        const label = this.add
+          .text(450, 1000, `YOU`, {
+            fontSize: "12px",
+            color: "#000",
+            backgroundColor: "#fff",
+            padding: { x: 4, y: 2 },
+          })
+          .setOrigin(1.5);
+
+        this.labels[msg.payload.userId] = label;
+        toast("Space joined successfully");
       }
-    });
+    );
 
-    this.userLeftUnsubscribe = WebSocketSingleton.subscribe('USER_LEFT', (msg) => {
-      const { id: userIdToDestroy, userName: userNameLeft } = msg.payload;
-
-      const playerToRemove = this.players[userIdToDestroy];
-      if (playerToRemove) {
-        playerToRemove.destroy();
-        delete this.players[userIdToDestroy];
+    this.userJoinedUnsubscribe = WebSocketSingleton.subscribe(
+      "USER_JOINED",
+      (msg) => {
+        const { id, x, y, userName, avatarId } = msg.payload;
+        WebSocketSingleton.setPlayers({ userName, avatarId, userId: id });
+        this.addPlayer(id, x, y, userName, avatarId);
       }
+    );
 
-      const labelToRemove = this.labels[userIdToDestroy];
-      if (labelToRemove) {
-        labelToRemove.destroy();
-        delete this.labels[userIdToDestroy];
+    this.movementUnsubscribe = WebSocketSingleton.subscribe(
+      "MOVEMENT",
+      (msg) => {
+        console.log("MV");
+        const {
+          userId,
+          x: velocityX,
+          y: velocityY,
+          xPos: targetX,
+          yPos: targetY,
+        } = msg.payload;
+        const player = this.players[userId];
+
+        if (player) {
+          let animationKey = "";
+          const texturekey = player.texture.key;
+
+          if (velocityX < 0) animationKey = `${texturekey}-left`;
+          else if (velocityX > 0) animationKey = `${texturekey}-right`;
+          else if (velocityY < 0) animationKey = `${texturekey}-back`;
+          else if (velocityY > 0) animationKey = `${texturekey}-front`;
+
+          // always play/update the animation (true allosws it to restart if already playing)
+          if (animationKey) {
+            player.anims.play(animationKey, true);
+            // Store the last animation for this player
+            this.playerLastAnimations[userId] = animationKey;
+          }
+
+          // check if there's already an active tween for this player
+          const existingTween = this.playerTweens[userId];
+
+          if (existingTween && existingTween.isPlaying()) {
+            // update the existing tween's target instead of creating a new one
+            existingTween.updateTo("x", targetX + 16, true);
+            existingTween.updateTo("y", targetY + 32, true);
+          } else {
+            // create a new tween only if none exists or the previous one completed
+            const dis = Phaser.Math.Distance.Between(
+              player.body.x + 16,
+              player.body.y + 32,
+              targetX,
+              targetY
+            );
+            const duration = (dis / 100) * 1000;
+
+            const newTween = this.tweens.add({
+              targets: player,
+              x: targetX + 16,
+              y: targetY + 32,
+              duration,
+              ease: "Linear",
+              onComplete: () => {
+                // stop the animation and show the first frame (idle pose) of the last direction
+                const lastAnimation = this.playerLastAnimations[userId];
+                player.anims.stop();
+
+                if (lastAnimation) {
+                  // extract direction from animation key (e.g., "pajji-left" -> "left")
+                  const direction = lastAnimation.split("-")[1];
+                  // set to the idle frame (first frame) of that direction
+                  const idleFrame = `${direction}000`;
+                  player.setFrame(idleFrame);
+                }
+
+                player.body.setVelocity(0);
+                delete this.playerTweens[userId];
+              },
+            });
+
+            this.playerTweens[userId] = newTween;
+          }
+        }
       }
-      toast(userNameLeft+" Left")
+    );
 
-      WebSocketSingleton.removePlayer(userIdToDestroy);
-      console.log(`${userNameLeft} has left the space`);
-    });
+    this.userLeftUnsubscribe = WebSocketSingleton.subscribe(
+      "USER_LEFT",
+      (msg) => {
+        const { id: userIdToDestroy, userName: userNameLeft } = msg.payload;
+
+        const playerToRemove = this.players[userIdToDestroy];
+        if (playerToRemove) {
+          playerToRemove.destroy();
+          delete this.players[userIdToDestroy];
+        }
+
+        const labelToRemove = this.labels[userIdToDestroy];
+        if (labelToRemove) {
+          labelToRemove.destroy();
+          delete this.labels[userIdToDestroy];
+        }
+
+        // clean up the tween if it exists
+        const tweenToRemove = this.playerTweens[userIdToDestroy];
+        if (tweenToRemove) {
+          tweenToRemove.remove();
+          delete this.playerTweens[userIdToDestroy];
+        }
+
+        // clean up the last animation record
+        delete this.playerLastAnimations[userIdToDestroy];
+
+        toast(userNameLeft + " Left");
+
+        WebSocketSingleton.removePlayer(userIdToDestroy);
+        console.log(`${userNameLeft} has left the space`);
+      }
+    );
   }
 
   create() {
@@ -172,8 +230,8 @@ export default class TestScene extends Scene {
     map.createLayer("Above Player", tileset!, 0, 0);
 
     this.player = this.physics.add.sprite(
-      390,
-      1260,
+      450,
+      1000,
       avatarId,
       avatarId + "000"
     );
@@ -202,11 +260,13 @@ export default class TestScene extends Scene {
       const texturekey = this.player.texture.key;
       velocityX = -100;
       animationKey = `${texturekey}-left`;
+      this.currentPlayerLastAnimation = animationKey;
       moving = true;
     } else if (cursors!.right.isDown) {
       const texturekey = this.player.texture.key;
       velocityX = 100;
       animationKey = `${texturekey}-right`;
+      this.currentPlayerLastAnimation = animationKey;
       moving = true;
     }
 
@@ -214,11 +274,13 @@ export default class TestScene extends Scene {
       const texturekey = this.player.texture.key;
       velocityY = -100;
       animationKey = `${texturekey}-back`;
+      this.currentPlayerLastAnimation = animationKey;
       moving = true;
     } else if (cursors!.down.isDown) {
       const texturekey = this.player.texture.key;
       velocityY = 100;
       animationKey = `${texturekey}-front`;
+      this.currentPlayerLastAnimation = animationKey;
       moving = true;
     }
 
@@ -230,6 +292,11 @@ export default class TestScene extends Scene {
     } else {
       this.player.body.setVelocity(0);
       this.player.anims.stop();
+      if (this.currentPlayerLastAnimation) {
+        const direction = this.currentPlayerLastAnimation.split("-")[1];
+        const idleFrame = `${direction}000`;
+        this.player.setFrame(idleFrame);
+      }
     }
 
     if (moving && this.socket?.readyState === WebSocket.OPEN) {
