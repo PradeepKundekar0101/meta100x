@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import {
   useTracks,
@@ -6,18 +6,20 @@ import {
   TrackReference,
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
-import { Move, Minimize2, Maximize2 } from "lucide-react";
+import { Move, Maximize2 } from "lucide-react";
 
 const MyVideoConference = () => {
-  const tracks = useTracks(
-    [
+  const sources = useMemo(
+    () => [
       { source: Track.Source.Camera, withPlaceholder: true },
       { source: Track.Source.ScreenShare, withPlaceholder: false },
     ],
-    { onlySubscribed: false },
+    []
   );
+  const options = useMemo(() => ({ onlySubscribed: false }), []);
 
-  // Persist positions and sizes
+  const tracks = useTracks(sources, options);
+
   const [videoStates, setVideoStates] = useState(() => {
     const savedStates = localStorage.getItem("videoStates");
     return savedStates
@@ -41,11 +43,11 @@ const MyVideoConference = () => {
     setVideoStates(
       (currentStates: {
         map: (
-          arg0: (state: any) => any[],
+          arg0: (state: any) => any[]
         ) => Iterable<readonly [unknown, unknown]> | null | undefined;
       }) => {
         const existingStatesMap = new Map(
-          currentStates.map((state) => [state.id, state]),
+          currentStates.map((state) => [state.id, state])
         );
 
         const newStates = tracks.map((track) => {
@@ -62,21 +64,21 @@ const MyVideoConference = () => {
         });
 
         return newStates;
-      },
+      }
     );
   }, [tracks]);
 
   const moveBox = (id: string, x: number, y: number) => {
     setVideoStates((prev: any[]) =>
-      prev.map((state) => (state.id === id ? { ...state, x, y } : state)),
+      prev.map((state) => (state.id === id ? { ...state, x, y } : state))
     );
   };
 
   const resizeBox = (id: string, width: number, height: number) => {
     setVideoStates((prev: any[]) =>
       prev.map((state) =>
-        state.id === id ? { ...state, width, height } : state,
-      ),
+        state.id === id ? { ...state, width, height } : state
+      )
     );
   };
 
@@ -84,7 +86,7 @@ const MyVideoConference = () => {
     <div className="absolute top-0 left-0 w-full h-full">
       {tracks.map((track) => {
         const state = videoStates.find(
-          (state: { id: string }) => state.id === track.participant.sid,
+          (state: { id: string }) => state.id === track.participant.sid
         );
         return (
           track.publication && (

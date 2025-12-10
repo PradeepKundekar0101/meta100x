@@ -13,7 +13,7 @@ import { LiveKitClient } from "@/lib/livekit";
 import { LiveKitRoom, RoomAudioRenderer } from "@livekit/components-react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-
+import ProximitySubscriptionManager from "./../../scenes/ProximitySubscriptionManager";
 import Preloader from "@/scenes/Preloader";
 import MyVideoConference from "./videoConference";
 const Room: React.FC = () => {
@@ -125,10 +125,14 @@ const Room: React.FC = () => {
           audio={false}
           video={false}
           token={livekitToken}
+          connectOptions={{
+            autoSubscribe: false,
+          }}
           serverUrl={wsUrl}
           data-lk-theme="default"
           className=" absolute "
         >
+          <ProximitySubscriptionManager />
           <div id="game-content" className=" w-full">
             {data?.data && (
               <div className="absolute top-4 left-4 bg-black/50 text-white p-2 rounded flex items-center space-x-2">

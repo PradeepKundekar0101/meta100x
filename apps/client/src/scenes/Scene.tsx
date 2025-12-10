@@ -22,11 +22,15 @@ export default class TestScene extends Scene {
   private playerTweens: Record<string, Phaser.Tweens.Tween>;
   private playerLastAnimations: Record<string, string>;
   private currentPlayerLastAnimation: string;
+  private proximityCircle: Phaser.GameObjects.Graphics | undefined;
 
   private spaceJoinedUnsubscribe?: () => void;
   private movementUnsubscribe?: () => void;
   private userJoinedUnsubscribe?: () => void;
   private userLeftUnsubscribe?: () => void;
+
+  private lastProximityCheck: number = 0;
+  private PROXIMITY_RADIUS = 100;
 
   constructor() {
     super("garden");
@@ -230,6 +234,10 @@ export default class TestScene extends Scene {
       avatarId + "000"
     );
 
+    this.proximityCircle = this.add.graphics();
+    this.proximityCircle.lineStyle(2, 0xffffff, 0.5);
+    this.proximityCircle.strokeCircle(0, 0, this.PROXIMITY_RADIUS);
+
     this.physics.add.collider(this.player, this.worldLayer!);
 
     const anims = this.anims;
@@ -258,7 +266,7 @@ export default class TestScene extends Scene {
     });
   }
 
-  update() {
+  update(time: number) {
     const cursors = this.input.keyboard?.createCursorKeys();
     let moving = false;
 
@@ -295,6 +303,10 @@ export default class TestScene extends Scene {
 
     this.player.body.setVelocity(velocityX, velocityY);
 
+    if (this.proximityCircle) {
+      this.proximityCircle.setPosition(this.player.x, this.player.y);
+    }
+
     if (moving) {
       this.player.anims.play(animationKey, true);
       this.labels[this.userId!]?.setPosition(this.player.x, this.player.y);
@@ -329,6 +341,10 @@ export default class TestScene extends Scene {
       if (player && label) {
         label.setPosition(player.x, player.y - 20);
       }
+    }
+    if (time > this.lastProximityCheck + 200) {
+      this.checkProximity();
+      this.lastProximityCheck = time;
     }
   }
 
@@ -367,5 +383,29 @@ export default class TestScene extends Scene {
       })
       .setOrigin(0.5);
     this.labels[playerId] = label;
+  }
+
+  private checkProximity() {
+    if (!this.player || !this.userId) return;
+
+    const nearByUserIds: string[] = [];
+    for (const [remoteUserId, remoteSprite] of Object.entries(this.players)) {
+      if (remoteSprite) {
+        const dis = Phaser.Math.Distance.Between(
+          this.player.x,
+          this.player.y,
+          remoteSprite.x,
+          remoteSprite.y
+        );
+        if (dis <= this.PROXIMITY_RADIUS) {
+          nearByUserIds.push(remoteUserId);
+        }
+      }
+    }
+    window.dispatchEvent(
+      new CustomEvent("ph-proximity-update", {
+        detail: { nearByUserIds },
+      })
+    );
   }
 }
