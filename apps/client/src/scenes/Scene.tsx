@@ -22,7 +22,7 @@ export default class TestScene extends Scene {
   private playerTweens: Record<string, Phaser.Tweens.Tween>;
   private playerLastAnimations: Record<string, string>;
   private currentPlayerLastAnimation: string;
-  // Unsubscribe functions to clean up listeners
+
   private spaceJoinedUnsubscribe?: () => void;
   private movementUnsubscribe?: () => void;
   private userJoinedUnsubscribe?: () => void;
@@ -50,7 +50,7 @@ export default class TestScene extends Scene {
             roomId,
             token,
           },
-        }),
+        })
       );
     } else {
       this.socket.addEventListener("open", () => {
@@ -61,12 +61,11 @@ export default class TestScene extends Scene {
               roomId,
               token,
             },
-          }),
+          })
         );
       });
     }
 
-    // Subscribe to different message types
     this.spaceJoinedUnsubscribe = WebSocketSingleton.subscribe(
       "SPACE_JOINED",
       (msg) => {
@@ -81,10 +80,9 @@ export default class TestScene extends Scene {
           });
         }
 
-        // Add label for current user
         const label = this.add
           .text(450, 1000, `YOU`, {
-            fontSize: "12px",
+            fontSize: "10px",
             color: "#000",
             backgroundColor: "#fff",
             padding: { x: 4, y: 2 },
@@ -93,7 +91,7 @@ export default class TestScene extends Scene {
 
         this.labels[msg.payload.userId] = label;
         toast("Space joined successfully");
-      },
+      }
     );
 
     this.userJoinedUnsubscribe = WebSocketSingleton.subscribe(
@@ -102,7 +100,7 @@ export default class TestScene extends Scene {
         const { id, x, y, userName, avatarId } = msg.payload;
         WebSocketSingleton.setPlayers({ userName, avatarId, userId: id });
         this.addPlayer(id, x, y, userName, avatarId);
-      },
+      }
     );
 
     this.movementUnsubscribe = WebSocketSingleton.subscribe(
@@ -127,14 +125,12 @@ export default class TestScene extends Scene {
           else if (velocityY < 0) animationKey = `${texturekey}-back`;
           else if (velocityY > 0) animationKey = `${texturekey}-front`;
 
-          // always play/update the animation (true allosws it to restart if already playing)
           if (animationKey) {
             player.anims.play(animationKey, true);
             // Store the last animation for this player
             this.playerLastAnimations[userId] = animationKey;
           }
 
-          // check if there's already an active tween for this player
           const existingTween = this.playerTweens[userId];
 
           if (existingTween && existingTween.isPlaying()) {
@@ -147,7 +143,7 @@ export default class TestScene extends Scene {
               player.body.x + 16,
               player.body.y + 32,
               targetX,
-              targetY,
+              targetY
             );
             const duration = (dis / 100) * 1000;
 
@@ -178,7 +174,7 @@ export default class TestScene extends Scene {
             this.playerTweens[userId] = newTween;
           }
         }
-      },
+      }
     );
 
     this.userLeftUnsubscribe = WebSocketSingleton.subscribe(
@@ -198,21 +194,19 @@ export default class TestScene extends Scene {
           delete this.labels[userIdToDestroy];
         }
 
-        // clean up the tween if it exists
         const tweenToRemove = this.playerTweens[userIdToDestroy];
         if (tweenToRemove) {
           tweenToRemove.remove();
           delete this.playerTweens[userIdToDestroy];
         }
 
-        // clean up the last animation record
         delete this.playerLastAnimations[userIdToDestroy];
 
         toast(userNameLeft + " Left");
 
         WebSocketSingleton.removePlayer(userIdToDestroy);
         console.log(`${userNameLeft} has left the space`);
-      },
+      }
     );
   }
 
@@ -222,7 +216,7 @@ export default class TestScene extends Scene {
     const map = this.make.tilemap({ key: "map" });
     const tileset = map.addTilesetImage(
       "tuxmon-sample-32px-extruded",
-      "tuxmon-sample-32px-extruded",
+      "tuxmon-sample-32px-extruded"
     );
     map.createLayer("Below Player", tileset!, 0, 0);
     this.worldLayer = map.createLayer("World", tileset!, 0, 0);
@@ -233,7 +227,7 @@ export default class TestScene extends Scene {
       450,
       1000,
       avatarId,
-      avatarId + "000",
+      avatarId + "000"
     );
 
     this.physics.add.collider(this.player, this.worldLayer!);
@@ -247,6 +241,21 @@ export default class TestScene extends Scene {
     const mapWidth = map.widthInPixels;
     const mapHeight = map.heightInPixels;
     this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
+
+    const zoomHandler = (e: Event) => {
+      const zoom = (e as CustomEvent).detail.zoom;
+      this.cameras.main.setZoom(zoom);
+    };
+
+    window.addEventListener("ph-zoom", zoomHandler);
+
+    this.events.on("shutdown", () => {
+      window.removeEventListener("ph-zoom", zoomHandler);
+    });
+
+    this.events.on("destroy", () => {
+      window.removeEventListener("ph-zoom", zoomHandler);
+    });
   }
 
   update() {
@@ -310,7 +319,7 @@ export default class TestScene extends Scene {
             xPos: this.player.body.x,
             yPos: this.player.body.y,
           },
-        }),
+        })
       );
     }
 
@@ -344,7 +353,7 @@ export default class TestScene extends Scene {
     x: number,
     y: number,
     userName: string,
-    avatarId: string,
+    avatarId: string
   ) {
     const newPlayer = this.physics.add.sprite(x, y, avatarId);
     this.players[playerId] = newPlayer;

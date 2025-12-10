@@ -15,11 +15,6 @@ wss.on("connection", (ws, req) => {
     console.log("New connection added from:", req.socket.remoteAddress);
     const user = new User(ws);
     user.initHandler();
-    // RedisClient.getPublisher().on("message",(channel:string,message:string)=>{
-    //     if(channel==="MESSAGE"){
-    //         handleMessages(user,message)
-    //     }
-    // })
   } catch (error) {
     console.error("Failed to initialize user:", error);
     if (ws.readyState === ws.OPEN) {
@@ -81,9 +76,8 @@ server.listen(8000, async () => {
     "message",
     (channel: string, message: string) => {
       if (channel === "MESSAGE") {
-        console.log(message);
         handleMessages(message);
       }
-    },
+    }
   );
 });

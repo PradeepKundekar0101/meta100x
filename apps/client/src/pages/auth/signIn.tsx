@@ -46,67 +46,80 @@ const SignIn = () => {
   };
 
   return (
-    <main className="max-w-md mx-auto mt-10">
-      <h1 className="text-2xl font-semibold mb-6">Login</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <Label htmlFor="email">Email*</Label>
-          <Input
-            {...register("email")}
-            name="email"
-            placeholder="pradeep@kundekar.com"
-            className="w-full"
-          />
-          {errors.email && (
-            <span className="text-red-600 text-sm">{errors.email.message}</span>
-          )}
-        </div>
-        <div>
-          <Label htmlFor="password">Password*</Label>
-          <Input
-            {...register("password")}
-            name="password"
-            type="password"
-            placeholder="*****"
-            className="w-full"
-          />
-          {errors.password && (
-            <span className="text-red-600 text-sm">
-              {errors.password.message}
-            </span>
-          )}
-        </div>
-        <div>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loginMutation.isPending}
-          >
-            {loginMutation.isPending ? "Logging in..." : "Login"}
-          </Button>
-          <Button
-            onClick={() => {
-              navigate("/");
-            }}
-            type="button"
-            className=" w-full mt-2"
-            variant={"outline"}
-          >
-            <Link to={"/"}>Cancel</Link>
-          </Button>
-        </div>
-        <Link to={"/signup"} className=" text-blue-700">
-          Don't have an account?
-        </Link>
+    <div className="w-full lg:grid lg:min-h-[100vh] lg:grid-cols-[60%_40%] xl:min-h-[100vh]">
+      <div className="hidden lg:block h-full w-full">
+        <img
+          src="/assets/hero.png"
+          alt="Image"
+          className="h-full w-full object-cover"
+        />
+      </div>
+      <div className="flex items-center justify-center py-12">
+        <main className="w-[350px] mx-auto gap-6">
+          <h1 className="text-2xl font-semibold mb-6">Login</h1>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div>
+              <Label htmlFor="email">Email*</Label>
+              <Input
+                {...register("email")}
+                name="email"
+                placeholder="pradeep@kundekar.com"
+                className="w-full"
+              />
+              {errors.email && (
+                <span className="text-red-600 text-sm">
+                  {errors.email.message}
+                </span>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="password">Password*</Label>
+              <Input
+                {...register("password")}
+                name="password"
+                type="password"
+                placeholder="*****"
+                className="w-full"
+              />
+              {errors.password && (
+                <span className="text-red-600 text-sm">
+                  {errors.password.message}
+                </span>
+              )}
+            </div>
+            <div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loginMutation.isPending}
+              >
+                {loginMutation.isPending ? "Logging in..." : "Login"}
+              </Button>
+              <Button
+                onClick={() => {
+                  navigate("/");
+                }}
+                type="button"
+                className=" w-full mt-2"
+                variant={"outline"}
+              >
+                <Link to={"/"}>Cancel</Link>
+              </Button>
+            </div>
+            <Link to={"/signup"} className=" text-blue-700">
+              Don't have an account?
+            </Link>
 
-        {loginMutation.isError && (
-          <p className="text-red-600 text-sm">
-            {loginMutation.error?.response?.data?.message ||
-              "An error occurred while logging in."}
-          </p>
-        )}
-      </form>
-    </main>
+            {loginMutation.isError && (
+              <p className="text-red-600 text-sm">
+                {loginMutation.error?.response?.data?.message ||
+                  "An error occurred while logging in."}
+              </p>
+            )}
+          </form>
+        </main>
+      </div>
+    </div>
   );
 };
 

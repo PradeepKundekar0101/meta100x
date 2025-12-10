@@ -1,44 +1,44 @@
 [
     {
         "name":"Sardar",
-        "thumbnail":"avatar_thumbnail/pajji.png",
+        "thumbnail":"avatar_thumbnail/pajji-1.png",
         "id":"pajji"
     },
     {
         "name":"Snowman",
-        "thumbnail":"avatar_thumbnail/snow.png",
+        "thumbnail":"avatar_thumbnail/snowman-1.png",
         "id":"snowman"
     },
 
     {
         "name":"Cat",
-        "thumbnail":"avatar_thumbnail/cat.png",
+        "thumbnail":"avatar_thumbnail/cat-1.png",
         "id":"cat"
     },
     {
         "name":"Bride",
-        "thumbnail":"avatar_thumbnail/bride.png",
+        "thumbnail":"avatar_thumbnail/bride-1.png",
         "id":"bride"
     },
     {
         "name":"Zombie",
-        "thumbnail":"avatar_thumbnail/zombie.png",
+        "thumbnail":"avatar_thumbnail/zombie-1.png",
         "id":"zombie"
     },
     {
         "name":"Vampire",
-        "thumbnail":"avatar_thumbnail/vampire.png",
+        "thumbnail":"avatar_thumbnail/vampire-1.png",
         "id":"vampire"
     },
     {
         "name":"Gingerbread",
-        "thumbnail":"avatar_thumbnail/gingerbread.png",
+        "thumbnail":"avatar_thumbnail/gingerbread-1.png",
         "id":"gingerbread"
     },
 
     {
         "name":"Wolf",
-        "thumbnail":"avatar_thumbnail/wolf.png",
+        "thumbnail":"avatar_thumbnail/fox-1.png",
         "id":"wolf"
     }
 

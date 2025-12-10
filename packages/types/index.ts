@@ -4,6 +4,7 @@ export const EventTypes = {
     LEAVE_SPACE: "LEAVE_SPACE",
     MOVE: "MOVE",
     CHAT_MESSAGE_CLIENT: "CHAT_MESSAGE_CLIENT",
+    UPDATE_STATUS: "UPDATE_STATUS",
   },
   Server: {
     SPACE_JOINED: "SPACE_JOINED",
@@ -11,6 +12,7 @@ export const EventTypes = {
     USER_LEFT: "USER_LEFT",
     MOVEMENT: "MOVEMENT",
     CHAT_MESSAGE_SERVER: "CHAT_MESSAGE_SERVER",
+    UPDATE_STATUS_SERVER: "UPDATE_STATUS_SERVER",
   },
 } as const;
 

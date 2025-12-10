@@ -83,9 +83,11 @@ const router = createBrowserRouter([
         path: "space/join",
         element: (
           <Suspense fallback={<Loader />}>
-            <ProtectedRoute>
-              <JoinRoom />
-            </ProtectedRoute>
+            <RootLayout>
+              <ProtectedRoute>
+                <JoinRoom />
+              </ProtectedRoute>
+            </RootLayout>
           </Suspense>
         ),
       },

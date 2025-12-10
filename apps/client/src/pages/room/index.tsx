@@ -2,8 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "@/hooks/use-axios";
-import { ChevronLeft, Settings } from "lucide-react";
-// import { getScene } from "@/utils/getScene";
+import { ChevronLeft, Settings, Plus, Minus } from "lucide-react";
 import MainScene from "@/scenes/Scene";
 import ChatBox from "./chatBox";
 import Dock from "./dock";
@@ -11,15 +10,8 @@ import { WebSocketSingleton } from "@/utils/websocket";
 import { useAppSelector } from "@/store/hooks";
 import { toast } from "sonner";
 import { LiveKitClient } from "@/lib/livekit";
-import {
-  LiveKitRoom,
-  RoomAudioRenderer,
-  useTracks,
-  VideoTrack,
-  TrackReference,
-} from "@livekit/components-react";
-import { Track } from "livekit-client";
-import { useDrag, DndProvider } from "react-dnd";
+import { LiveKitRoom, RoomAudioRenderer } from "@livekit/components-react";
+import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 import Preloader from "@/scenes/Preloader";
@@ -27,13 +19,18 @@ import MyVideoConference from "./videoConference";
 const Room: React.FC = () => {
   const wsUrl = import.meta.env.VITE_LIVEKIT_WSS_URL;
   const { roomCode } = useParams();
-
   const { user } = useAppSelector((state) => state.auth);
   const api = useAxios();
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [livekitToken, setLivekitToken] = useState<string>();
-  //   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
-  // const [isVideoEnabled, setIsVideoEnabled] = useState(false);
+  const [zoom, setZoom] = useState(1);
+
+  const handleZoom = (newZoom: number) => {
+    setZoom(newZoom);
+    window.dispatchEvent(
+      new CustomEvent("ph-zoom", { detail: { zoom: newZoom } })
+    );
+  };
 
   const { data, error, isError, isLoading } = useQuery({
     queryKey: ["room", roomCode],
@@ -70,52 +67,37 @@ const Room: React.FC = () => {
     }
   }, [data, user, roomCode]);
 
-  const initPhaser = useCallback(
-    async (mapId: string) => {
-      try {
-        const Phaser = await import("phaser");
-        new Phaser.Game({
-          type: Phaser.AUTO,
-          title: roomCode,
-          scene: [Preloader, MainScene],
-          parent: "game-content",
-          width: window.innerWidth,
-          height: window.innerHeight,
-          pixelArt: true,
-          scale: { zoom: 1 },
-          physics: {
-            default: "arcade",
-            arcade: {
-              gravity: { y: 0, x: 0 },
-              // debug: true,
-            },
+  const initPhaser = useCallback(async () => {
+    try {
+      const Phaser = await import("phaser");
+      new Phaser.Game({
+        type: Phaser.AUTO,
+        title: roomCode,
+        scene: [Preloader, MainScene],
+        parent: "game-content",
+        width: window.innerWidth,
+        height: window.innerHeight,
+        pixelArt: true,
+        scale: { zoom: 1 },
+        physics: {
+          default: "arcade",
+          arcade: {
+            gravity: { y: 0, x: 0 },
+            // debug: true,
           },
-          backgroundColor: "#000",
-        });
-      } catch (error) {
-        console.error("Failed to initialize Phaser", error);
-        toast.error("Game initialization failed");
-      }
-    },
-    [roomCode],
-  );
-
-  // const initLiveKitRoom = useCallback(async () => {
-  //   if (!livekitToken) return;
-
-  //   try {
-  //     const newRoom = new LRoom();
-  //     await newRoom.connect(wsUrl, livekitToken);
-  //   } catch (error) {
-  //     console.error("LiveKit room connection failed", error);
-  //     toast.error("Video conference connection failed");
-  //   }
-  // }, [livekitToken, wsUrl]);
+        },
+        backgroundColor: "#000",
+      });
+    } catch (error) {
+      console.error("Failed to initialize Phaser", error);
+      toast.error("Game initialization failed");
+    }
+  }, [roomCode]);
 
   useEffect(() => {
     if (data?.data) {
       initWebSocket();
-      initPhaser(data.data.mapId);
+      initPhaser();
     }
   }, [data, initWebSocket, initPhaser]);
 
@@ -159,6 +141,30 @@ const Room: React.FC = () => {
                 </button>
               </div>
             )}
+
+            <div className="absolute bottom-4 left-4 bg-black/50 p-2 rounded-lg flex items-center gap-2 z-50 text-white">
+              <button
+                onClick={() => handleZoom(Math.max(zoom - 0.1, 0.5))}
+                className="hover:bg-white/20 p-1 rounded"
+              >
+                <Minus size={16} />
+              </button>
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={zoom}
+                onChange={(e) => handleZoom(parseFloat(e.target.value))}
+                className="w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+              />
+              <button
+                onClick={() => handleZoom(Math.min(zoom + 0.1, 2))}
+                className="hover:bg-white/20 p-1 rounded"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
 
             <Dock />
           </div>
