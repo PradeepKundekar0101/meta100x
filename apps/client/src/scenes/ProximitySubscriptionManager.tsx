@@ -8,11 +8,12 @@ const ProximitySubscriptionManager = () => {
 
   useEffect(() => {
     const handleProximityUpdates = (e: CustomEvent) => {
-      const nearByIds = e.detail.nearbyUserIds as string[];
+      const nearByIds = e.detail.nearByUserIds as string[];
       nearbyIdsRef.current = new Set(nearByIds);
 
       room.remoteParticipants.forEach((participant) => {
         const shouldSubscribe = nearbyIdsRef.current.has(participant.identity);
+
         updateSubscriptionForParticipant(participant, shouldSubscribe);
       });
     };
@@ -20,6 +21,13 @@ const ProximitySubscriptionManager = () => {
       "ph-proximity-update",
       handleProximityUpdates as EventListener
     );
+
+    return () => {
+      window.removeEventListener(
+        "ph-proximity-update",
+        handleProximityUpdates as EventListener
+      );
+    };
   }, [room]);
   const updateSubscriptionForParticipant = (
     participant: RemoteParticipant,

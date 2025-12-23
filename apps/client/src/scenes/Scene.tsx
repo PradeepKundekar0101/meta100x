@@ -32,6 +32,10 @@ export default class TestScene extends Scene {
   private lastProximityCheck: number = 0;
   private PROXIMITY_RADIUS = 100;
 
+  private isDragging = false;
+  private dragStartPoint: Phaser.Math.Vector2 | null = null;
+  private dragStartCam: Phaser.Math.Vector2 | null = null;
+
   constructor() {
     super("garden");
     this.players = {};
@@ -264,15 +268,65 @@ export default class TestScene extends Scene {
     this.events.on("destroy", () => {
       window.removeEventListener("ph-zoom", zoomHandler);
     });
+
+    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      if (pointer.isDown) {
+        this.isDragging = true;
+        this.cameras.main.stopFollow();
+        this.dragStartPoint = new Phaser.Math.Vector2(pointer.x, pointer.y);
+        this.dragStartCam = new Phaser.Math.Vector2(
+          this.cameras.main.scrollX,
+          this.cameras.main.scrollY
+        );
+        this.input.setDefaultCursor("grabbing");
+      }
+    });
+
+    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+      if (this.isDragging && this.dragStartCam && this.dragStartPoint) {
+        const zoom = this.cameras.main.zoom;
+        const diffX = (pointer.x - this.dragStartPoint.x) / zoom;
+        const diffY = (pointer.y - this.dragStartPoint.y) / zoom;
+
+        this.cameras.main.scrollX = this.dragStartCam.x - diffX;
+        this.cameras.main.scrollY = this.dragStartCam.y - diffY;
+      }
+    });
+
+    this.input.on("pointerup", () => {
+      if (this.isDragging) {
+        this.isDragging = false;
+        this.input.setDefaultCursor("default");
+      }
+    });
+
+    this.input.on("pointerupoutside", () => {
+      if (this.isDragging) {
+        this.isDragging = false;
+        this.input.setDefaultCursor("default");
+      }
+    });
   }
 
   update(time: number) {
     const cursors = this.input.keyboard?.createCursorKeys();
     let moving = false;
-
+    if (
+      (cursors!.left.isDown ||
+        cursors!.right.isDown ||
+        cursors!.up.isDown ||
+        cursors!.down.isDown) &&
+      !this.isDragging
+    ) {
+      // If the camera isn't currently following the player, start following
+      if (!this.cameras.main.deadzone) {
+        this.cameras.main.startFollow(this.player, true);
+      }
+    }
     let velocityX = 0;
     let velocityY = 0;
     let animationKey = "";
+
     if (cursors!.left.isDown) {
       const texturekey = this.player.texture.key;
       velocityX = -100;

@@ -83,7 +83,7 @@ const MyVideoConference = () => {
   };
 
   return (
-    <div className="absolute top-0 left-0 w-full h-full">
+    <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
       {tracks.map((track) => {
         const state = videoStates.find(
           (state: { id: string }) => state.id === track.participant.sid
@@ -188,7 +188,7 @@ const DraggableResizableVideo = ({
         opacity: isDragging ? 0.5 : 1,
         transition: "opacity 0.2s ease",
       }}
-      className={`bg-gray-800 rounded-lg overflow-hidden relative group ${
+      className={`bg-gray-800 rounded-lg overflow-hidden relative group pointer-events-auto ${
         track.participant.isSpeaking
           ? "border-green-300 shadow-green-600 shadow-xl border-2"
           : "border-none"
@@ -204,7 +204,8 @@ const DraggableResizableVideo = ({
 
       {/* Identity Label */}
       <h1 className="absolute bg-white text-black bottom-3 left-2 z-10">
-        {track.participant.identity}
+        {track.participant.identity}{" "}
+        {track.publication?.isSubscribed ? "(Sub)" : "(Unsub)"}
       </h1>
 
       {/* Video Track */}
