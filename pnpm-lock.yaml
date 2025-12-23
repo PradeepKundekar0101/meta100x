@@ -253,6 +253,13 @@ importers:
       express:
         specifier: ^4.21.1
         version: 4.21.1
+    devDependencies:
+      esbuild:
+        specifier: ^0.24.0
+        version: 0.24.0
+      tsc-watch:
+        specifier: ^6.2.1
+        version: 6.2.1(typescript@5.7.2)
 
   apps/ws-server:
     dependencies:
