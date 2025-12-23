@@ -31,7 +31,11 @@ const JoinRoom = () => {
   const [roomCode, setRoomCode] = useState<string | undefined>(
     searchParams.get("roomCode") || ""
   );
-  const [roomDetails, setRoomDetails] = useState<any | null>(null);
+  const [roomDetails, setRoomDetails] = useState<{
+    mapId: string;
+    roomName: string;
+    creator: { userName: string; email: string };
+  } | null>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<string | undefined>(
     user?.avatarId
   );
@@ -51,9 +55,9 @@ const JoinRoom = () => {
       setRoomDetails(data.data);
       console.log(data.data);
       toast.success("Room details loaded!");
-    } catch (error: any) {
+    } catch (error) {
       toast.error("Failed to fetch room details");
-      console.log(error.message);
+      console.log(error);
       setRoomDetails(null);
     } finally {
       setLoading(false);

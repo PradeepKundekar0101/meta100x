@@ -1,6 +1,6 @@
 import { Scene } from "phaser";
 import { createAnimations } from "./utils";
-import { WebSocketSingleton } from "@/utils/websocket";
+import { WebSocketMessage, WebSocketSingleton } from "@/utils/websocket";
 import { toast } from "sonner";
 import { LiveKitClient } from "@/lib/livekit";
 
@@ -8,6 +8,41 @@ const avatarId = localStorage.getItem("avatarId") || "pajji";
 const roomId = localStorage.getItem("roomId") || "default";
 
 const token = localStorage.getItem("token") || "token";
+
+interface User {
+  id: string;
+  x: number;
+  y: number;
+  userName: string;
+  avatarId: string;
+}
+
+interface SpaceJoinedPayload {
+  userId: string;
+  liveKitAccessToken: string;
+  users: User[];
+}
+
+interface UserJoinedPayload {
+  id: string;
+  x: number;
+  y: number;
+  userName: string;
+  avatarId: string;
+}
+
+interface MovementPayload {
+  userId: string;
+  x: number;
+  y: number;
+  xPos: number;
+  yPos: number;
+}
+
+interface UserLeftPayload {
+  id: string;
+  userName: string;
+}
 
 export default class TestScene extends Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -76,12 +111,13 @@ export default class TestScene extends Scene {
 
     this.spaceJoinedUnsubscribe = WebSocketSingleton.subscribe(
       "SPACE_JOINED",
-      (msg) => {
-        LiveKitClient.setToken(msg.payload.liveKitAccessToken!);
-        this.userId = msg.payload.userId;
+      (msg: WebSocketMessage) => {
+        const payload = msg.payload as SpaceJoinedPayload;
+        LiveKitClient.setToken(payload.liveKitAccessToken!);
+        this.userId = payload.userId;
 
-        if (Array.isArray(msg.payload.users)) {
-          msg.payload.users.forEach((e: any) => {
+        if (Array.isArray(payload.users)) {
+          payload.users.forEach((e: User) => {
             const { id, x, y, userName, avatarId } = e;
             WebSocketSingleton.setPlayers({ userName, avatarId, userId: id });
             this.addPlayer(id, x, y, userName, avatarId);
@@ -97,15 +133,16 @@ export default class TestScene extends Scene {
           })
           .setOrigin(1.5);
 
-        this.labels[msg.payload.userId] = label;
+        this.labels[payload.userId] = label;
         toast("Space joined successfully");
       }
     );
 
     this.userJoinedUnsubscribe = WebSocketSingleton.subscribe(
       "USER_JOINED",
-      (msg) => {
-        const { id, x, y, userName, avatarId } = msg.payload;
+      (msg: WebSocketMessage) => {
+        const payload = msg.payload as UserJoinedPayload;
+        const { id, x, y, userName, avatarId } = payload;
         WebSocketSingleton.setPlayers({ userName, avatarId, userId: id });
         this.addPlayer(id, x, y, userName, avatarId);
       }
@@ -113,15 +150,16 @@ export default class TestScene extends Scene {
 
     this.movementUnsubscribe = WebSocketSingleton.subscribe(
       "MOVEMENT",
-      (msg) => {
+      (msg: WebSocketMessage) => {
         console.log("MV");
+        const payload = msg.payload as MovementPayload;
         const {
           userId,
           x: velocityX,
           y: velocityY,
           xPos: targetX,
           yPos: targetY,
-        } = msg.payload;
+        } = payload;
         const player = this.players[userId];
 
         if (player) {
@@ -187,8 +225,9 @@ export default class TestScene extends Scene {
 
     this.userLeftUnsubscribe = WebSocketSingleton.subscribe(
       "USER_LEFT",
-      (msg) => {
-        const { id: userIdToDestroy, userName: userNameLeft } = msg.payload;
+      (msg: WebSocketMessage) => {
+        const payload = msg.payload as UserLeftPayload;
+        const { id: userIdToDestroy, userName: userNameLeft } = payload;
 
         const playerToRemove = this.players[userIdToDestroy];
         if (playerToRemove) {

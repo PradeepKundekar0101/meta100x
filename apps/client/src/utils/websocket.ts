@@ -8,7 +8,7 @@ export interface Player {
 
 export interface WebSocketMessage {
   type: string;
-  payload: any;
+  payload: object;
 }
 
 type MessageListener = (msg: WebSocketMessage) => void;

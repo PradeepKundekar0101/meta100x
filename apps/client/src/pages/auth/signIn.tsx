@@ -31,8 +31,12 @@ const SignIn = () => {
     onSuccess: () => {
       toast.success("Login successful");
     },
-    onError: (error: any) => {
-      toast.error("Login failed:", error.response?.data || error.message);
+    onError: (error: {
+      response: {
+        data: string;
+      };
+    }) => {
+      toast.error("Login failed: " + error.response.data);
     },
   });
 
@@ -112,7 +116,11 @@ const SignIn = () => {
 
             {loginMutation.isError && (
               <p className="text-red-600 text-sm">
-                {loginMutation.error?.response?.data?.message ||
+                {(
+                  loginMutation.error as unknown as {
+                    response: { data: { message: string } };
+                  }
+                )?.response?.data?.message ||
                   "An error occurred while logging in."}
               </p>
             )}

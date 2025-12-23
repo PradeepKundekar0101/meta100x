@@ -14,7 +14,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       return;
     }
     try {
-      const decodedToken: any = jwtDecode(token);
+      const decodedToken: { expiresIn: number } = jwtDecode(token);
       console.log(decodedToken);
       if (decodedToken.expiresIn * 1000 < Date.now()) {
         alert("Session Expired");
@@ -22,9 +22,10 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         return;
       }
     } catch (error) {
+      console.log(error);
       navigate("/");
       return;
     }
-  }, [token]);
+  }, [token, navigate]);
   return children;
 };

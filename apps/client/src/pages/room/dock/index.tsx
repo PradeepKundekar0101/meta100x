@@ -6,9 +6,7 @@ import { RoomDetailsDialog } from "./roomDetailsDialog";
 import { TrackToggleComponent } from "./trackToggle";
 import { StatusUpdate } from "./statusUpdate";
 
-interface DockType {}
-
-const Dock: React.FC<DockType> = () => {
+const Dock = () => {
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
 
   // const [socket, setSocket] = useState<WebSocket | null>(null);

@@ -34,11 +34,13 @@ const SignUp = () => {
     },
     onSuccess: (data) => {
       toast.dismiss(toastId);
-      console.log("first");
-      console.log(data);
-      const { id, avatarId, userName, email, createdAt } = data?.data?.user;
+      const { id, avatarId, userName, email, createdAt } =
+        data?.data?.user || {};
       const token = data?.data?.token;
-      localStorage.setItem("token", token!);
+
+      if (token) {
+        localStorage.setItem("token", token);
+      }
       dispatch(
         login({ user: { userName, email, avatarId, id, createdAt }, token })
       );
@@ -46,13 +48,13 @@ const SignUp = () => {
       navigate("/");
       reset();
     },
-    onError: (error: any) => {
+    onError: (error: {
+      response?: { data: { message: string } };
+      message: string;
+    }) => {
       toast.dismiss(toastId);
       console.log(error);
-      toast.error(
-        `signup failed`,
-        error.response?.data.message || error.message
-      );
+      toast.error(`signup failed`);
     },
   });
 

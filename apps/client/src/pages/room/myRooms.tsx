@@ -74,6 +74,7 @@ const CreateSpaceDialog = () => {
       setRoomName("");
       setOpen(false);
     } catch (error) {
+      console.log(error);
       toast({
         title: "Error",
         description: "Failed to create a new space.",

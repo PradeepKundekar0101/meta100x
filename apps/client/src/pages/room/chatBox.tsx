@@ -45,16 +45,26 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen, roomId }) => {
   useEffect(() => {
     if (data && data.data) {
       const msg: Message[] = [];
-      data.data.chats.forEach((e: any) => {
-        msg.push({
-          userName: e.sender.userName,
-          avatarId: e.sender.avatarId,
-          createdAt: e.createdAt,
-          content: e.content,
-          id: e.sender.id,
-          isCurrentUser: e.sender.id === user?.id,
-        });
-      });
+      data.data.chats.forEach(
+        (e: {
+          sender: {
+            userName: string;
+            avatarId: string;
+            id: string;
+          };
+          createdAt: string;
+          content: string;
+        }) => {
+          msg.push({
+            userName: e.sender.userName,
+            avatarId: e.sender.avatarId,
+            createdAt: e.createdAt,
+            content: e.content,
+            id: e.sender.id,
+            isCurrentUser: e.sender.id === user?.id,
+          });
+        }
+      );
       setMessages(msg);
     }
   }, [data]);
@@ -70,7 +80,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen, roomId }) => {
               userName: user?.userName,
               avatarId: localStorage.getItem("avatarId") || "pajji",
             },
-          }),
+          })
         );
       }
       setInputMessage("");
@@ -80,7 +90,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen, roomId }) => {
     const chatMessageUnsubscribe = WebSocketSingleton.subscribe(
       "CHAT_MESSAGE_SERVER",
       (msg) => {
-        const { avatarId, userName, createdAt, content, userId } = msg.payload;
+        const { avatarId, userName, createdAt, content, userId } =
+          msg.payload as {
+            avatarId: string;
+            userName: string;
+            createdAt: string;
+            content: string;
+            userId: string;
+          };
         console.log(msg);
         setMessages((prevMessages) => [
           ...prevMessages,
@@ -93,7 +110,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen, roomId }) => {
             isCurrentUser: userId === user?.id,
           },
         ]);
-      },
+      }
     );
 
     // Return cleanup function to unsubscribe

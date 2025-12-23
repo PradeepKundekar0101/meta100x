@@ -33,17 +33,15 @@ const MyVideoConference = () => {
         }));
   });
 
-  // Update localStorage whenever video states change
   useEffect(() => {
     localStorage.setItem("videoStates", JSON.stringify(videoStates));
   }, [videoStates]);
 
-  // Update states if tracks change
   useEffect(() => {
     setVideoStates(
       (currentStates: {
         map: (
-          arg0: (state: any) => any[]
+          arg0: (state: { id: string }) => (string | { id: string })[]
         ) => Iterable<readonly [unknown, unknown]> | null | undefined;
       }) => {
         const existingStatesMap = new Map(
@@ -69,13 +67,13 @@ const MyVideoConference = () => {
   }, [tracks]);
 
   const moveBox = (id: string, x: number, y: number) => {
-    setVideoStates((prev: any[]) =>
+    setVideoStates((prev: { id: string }[]) =>
       prev.map((state) => (state.id === id ? { ...state, x, y } : state))
     );
   };
 
   const resizeBox = (id: string, width: number, height: number) => {
-    setVideoStates((prev: any[]) =>
+    setVideoStates((prev: { id: string }[]) =>
       prev.map((state) =>
         state.id === id ? { ...state, width, height } : state
       )
@@ -148,8 +146,7 @@ const DraggableResizableVideo = ({
     },
   });
 
-  // Resizing logic
-  const [{}, resize] = useDrag({
+  const [, resize] = useDrag({
     type: "resize",
     item: () => ({
       id: track.participant.sid,
