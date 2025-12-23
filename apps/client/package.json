@@ -28,7 +28,6 @@
     "@tanstack/react-query": "^5.62.0",
     "axios": "^1.7.8",
     "class-variance-authority": "^0.7.1",
-    "client": "link:",
     "clsx": "^2.1.1",
     "jwt-decode": "^4.0.0",
     "livekit-client": "^2.7.3",
