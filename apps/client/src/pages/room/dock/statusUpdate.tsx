@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Select,
   SelectItem,
@@ -8,7 +7,7 @@ import {
 } from "@/components/ui/select";
 
 export const StatusUpdate = () => {
-  const [status, setStatus] = useState<"online" | "busy">("online");
+  // const [status, setStatus] = useState<"online" | "busy">("online");
   return (
     <div>
       <Select>

@@ -138,7 +138,7 @@ const DraggableResizableVideo = ({
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
-    end: (item, monitor) => {
+    end: (_, monitor) => {
       const delta = monitor.getDifferenceFromInitialOffset();
       if (delta) {
         const newX = x + delta.x;
@@ -149,7 +149,7 @@ const DraggableResizableVideo = ({
   });
 
   // Resizing logic
-  const [{ isResizing }, resize] = useDrag({
+  const [{}, resize] = useDrag({
     type: "resize",
     item: () => ({
       id: track.participant.sid,
@@ -159,7 +159,7 @@ const DraggableResizableVideo = ({
     collect: (monitor) => ({
       isResizing: monitor.isDragging(),
     }),
-    end: (item, monitor) => {
+    end: (_, monitor) => {
       const delta = monitor.getDifferenceFromInitialOffset();
       if (delta) {
         const newWidth = Math.max(100, Math.round(width + delta.x));
