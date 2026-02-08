@@ -125,7 +125,7 @@ const CreateSpaceDialog = () => {
                   onClick={() => setSelectedMapId(map.mapId)}
                 >
                   <img
-                    src={`/assets/${map.thumbnail}`}
+                    src={`/${map.thumbnail}`}
                     alt={map.title}
                     className="w-full h-24 object-cover"
                   />
@@ -233,7 +233,7 @@ const SpaceCard = ({ space }: { space: Space }) => {
 
   const getMapThumbnail = (mapId: string) => {
     const map = mapData.find((m) => m.mapId === mapId);
-    return map ? `/assets/${map.thumbnail}` : null;
+    return map ? `/${map.thumbnail}` : null;
   };
 
   const copyRoomCode = (code: string) => {

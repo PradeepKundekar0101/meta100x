@@ -53,7 +53,7 @@ const SignIn = () => {
     <div className="w-full lg:grid lg:min-h-[100vh] lg:grid-cols-[60%_40%] xl:min-h-[100vh]">
       <div className="hidden lg:block h-full w-full">
         <img
-          src="/assets/hero.png"
+          src="/hero.png"
           alt="Image"
           className="h-full w-full object-cover"
         />
