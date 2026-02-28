@@ -141,10 +141,10 @@ const Room: React.FC = () => {
           }}
           serverUrl={wsUrl}
           data-lk-theme="default"
-          className=" absolute "
+          className="absolute inset-0"
         >
           <ProximitySubscriptionManager />
-          <div id="game-content" className=" w-full">
+          <div id="game-content" className="w-full h-full relative">
             {data?.data && (
               <div className="absolute top-4 left-4 bg-black/50 text-white p-2 rounded flex items-center space-x-2">
                 <h1 className="text-xl font-semibold">{data.data.roomName}</h1>
