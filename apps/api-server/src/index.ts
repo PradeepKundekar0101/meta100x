@@ -15,6 +15,7 @@ app.get("/", (req, res) => {
   res.send("API server is running");
 });
 app.use("/api/v1", router);
-app.listen(8001, () => {
-  console.log("API server running at http://localhost:8001");
+const PORT = process.env.PORT || 8001;
+app.listen(PORT, () => {
+  console.log(`API server running on port ${PORT}`);
 });
