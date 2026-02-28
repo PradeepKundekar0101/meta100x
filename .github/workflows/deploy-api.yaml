@@ -12,7 +12,7 @@ on:
 env:
   AWS_REGION: ap-south-1
   ECR_REPOSITORY: metaplot/api-server
-  ECS_CLUSTER: metaplot-api-server
+  ECS_CLUSTER: metaplot-apiserver
   ECS_SERVICE: metaverse-service
   ECS_TASK_DEFINITION: metaverse
   CONTAINER_NAME: metaverse-api-server
