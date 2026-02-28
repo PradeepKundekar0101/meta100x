@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Phaser from "phaser";
 import MainScene from "@/scenes/Scene";
-import Dock from "./dock";
+import Dock, { type ViewMode } from "./dock";
 import SpaceSidebar, { type TabId } from "./spaceSidebar";
 import { WebSocketSingleton } from "@/utils/websocket";
 import { useAppSelector } from "@/store/hooks";
@@ -24,6 +24,8 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import ProximitySubscriptionManager from "./../../scenes/ProximitySubscriptionManager";
 import Preloader from "@/scenes/Preloader";
 import MyVideoConference from "./videoConference";
+import MeetingView from "./meetingView";
+import MeetingSubscriptionManager from "./meetingSubscriptionManager";
 
 const Room: React.FC = () => {
   const wsUrl = import.meta.env.VITE_LIVEKIT_WSS_URL;
@@ -33,6 +35,7 @@ const Room: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarTab, setSidebarTab] = useState<TabId>("chat");
   const [livekitToken, setLivekitToken] = useState<string>();
+  const [viewMode, setViewMode] = useState<ViewMode>("space");
   const [zoom, setZoom] = useState(1);
   const [minZoom, setMinZoom] = useState(1);
   const gameRef = useRef<Phaser.Game | null>(null);
@@ -155,9 +158,14 @@ const Room: React.FC = () => {
   return (
     <div className="flex relative h-screen bg-[#0c0c14]">
       <div className="flex-grow relative overflow-hidden">
+        {/* Phaser game — hidden when in meeting mode */}
         <div
           id="game-content"
-          className="absolute inset-0"
+          className="absolute inset-0 transition-opacity duration-300"
+          style={{
+            opacity: viewMode === "space" ? 1 : 0,
+            pointerEvents: viewMode === "space" ? "auto" : "none",
+          }}
         />
 
         {/* Room name badge — top left */}
@@ -168,45 +176,52 @@ const Room: React.FC = () => {
               <span className="text-white/80 text-sm font-medium">
                 {data.data.roomName}
               </span>
+              {viewMode === "meeting" && (
+                <span className="text-[10px] text-[#a49bff] bg-[#6658fe]/15 px-2 py-0.5 rounded-full font-medium">
+                  Meeting
+                </span>
+              )}
             </div>
           </div>
         )}
 
-        {/* Zoom controls — bottom left */}
-        <div className="absolute bottom-20 left-4 z-20 flex flex-col items-center gap-1 bg-[#0c0c14]/80 backdrop-blur-md rounded-xl ring-1 ring-white/[0.08] p-1.5">
-          <button
-            onClick={() => handleZoom(Math.min(zoom + 0.15, minZoom + 2))}
-            className="p-1.5 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-colors"
-          >
-            <Plus size={14} />
-          </button>
-          <div className="relative h-24 w-6 flex items-center justify-center">
-            <div className="absolute h-full w-0.5 bg-white/[0.08] rounded-full" />
-            <input
-              type="range"
-              min={minZoom}
-              max={minZoom + 2}
-              step="0.1"
-              value={zoom}
-              onChange={(e) => handleZoom(parseFloat(e.target.value))}
-              className="absolute w-24 h-1.5 appearance-none bg-transparent rotate-[-90deg] cursor-pointer
-                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
-                [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#6658fe]
-                [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(102,88,254,0.4)]
-                [&::-webkit-slider-thumb]:cursor-pointer
-                [&::-webkit-slider-track]:bg-transparent"
-            />
+        {/* Zoom controls — only in space mode */}
+        {viewMode === "space" && (
+          <div className="absolute bottom-20 left-4 z-20 flex flex-col items-center gap-1 bg-[#0c0c14]/80 backdrop-blur-md rounded-xl ring-1 ring-white/[0.08] p-1.5">
+            <button
+              onClick={() => handleZoom(Math.min(zoom + 0.15, minZoom + 2))}
+              className="p-1.5 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-colors"
+            >
+              <Plus size={14} />
+            </button>
+            <div className="relative h-24 w-6 flex items-center justify-center">
+              <div className="absolute h-full w-0.5 bg-white/[0.08] rounded-full" />
+              <input
+                type="range"
+                min={minZoom}
+                max={minZoom + 2}
+                step="0.1"
+                value={zoom}
+                onChange={(e) => handleZoom(parseFloat(e.target.value))}
+                className="absolute w-24 h-1.5 appearance-none bg-transparent rotate-[-90deg] cursor-pointer
+                  [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
+                  [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#6658fe]
+                  [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(102,88,254,0.4)]
+                  [&::-webkit-slider-thumb]:cursor-pointer
+                  [&::-webkit-slider-track]:bg-transparent"
+              />
+            </div>
+            <button
+              onClick={() => handleZoom(Math.max(zoom - 0.15, minZoom))}
+              className="p-1.5 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-colors"
+            >
+              <Minus size={14} />
+            </button>
+            <span className="text-[10px] text-white/25 font-mono tabular-nums">
+              {Math.round(zoom * 100)}%
+            </span>
           </div>
-          <button
-            onClick={() => handleZoom(Math.max(zoom - 0.15, minZoom))}
-            className="p-1.5 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-colors"
-          >
-            <Minus size={14} />
-          </button>
-          <span className="text-[10px] text-white/25 font-mono tabular-nums">
-            {Math.round(zoom * 100)}%
-          </span>
-        </div>
+        )}
 
         {/* Sidebar toggle pills — top right */}
         <div className="absolute top-4 right-4 z-50 flex items-center gap-1 bg-[#0c0c14]/80 backdrop-blur-md rounded-xl ring-1 ring-white/[0.08] p-1">
@@ -221,11 +236,10 @@ const Room: React.FC = () => {
                 key={tab}
                 onClick={() => openSidebarTo(tab)}
                 title={label}
-                className={`p-2 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? "bg-[#6658fe]/15 text-[#a49bff]"
-                    : "text-white/35 hover:text-white/60 hover:bg-white/[0.04]"
-                }`}
+                className={`p-2 rounded-lg transition-all duration-200 ${isActive
+                  ? "bg-[#6658fe]/15 text-[#a49bff]"
+                  : "text-white/35 hover:text-white/60 hover:bg-white/[0.04]"
+                  }`}
               >
                 <Icon size={16} />
               </button>
@@ -240,11 +254,6 @@ const Room: React.FC = () => {
               <PanelRightClose size={16} />
             </button>
           )}
-        </div>
-
-        {/* Dock — bottom center */}
-        <div className="absolute bottom-0 left-0 right-0 z-20">
-          <Dock />
         </div>
 
         <LiveKitRoom
@@ -265,11 +274,25 @@ const Room: React.FC = () => {
             pointerEvents: "none",
           }}
         >
-          <ProximitySubscriptionManager />
-          <DndProvider backend={HTML5Backend}>
-            <MyVideoConference />
-          </DndProvider>
+          {viewMode === "space" ? (
+            <>
+              <ProximitySubscriptionManager />
+              <DndProvider backend={HTML5Backend}>
+                <MyVideoConference />
+              </DndProvider>
+            </>
+          ) : (
+            <>
+              <MeetingSubscriptionManager />
+              <div className="pointer-events-auto">
+                <MeetingView />
+              </div>
+            </>
+          )}
           <RoomAudioRenderer />
+          <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-auto">
+            <Dock viewMode={viewMode} onViewModeChange={setViewMode} />
+          </div>
         </LiveKitRoom>
       </div>
 

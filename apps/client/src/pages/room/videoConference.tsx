@@ -25,12 +25,12 @@ const MyVideoConference = () => {
     return savedStates
       ? JSON.parse(savedStates)
       : tracks.map((track, index) => ({
-          id: track.participant.sid,
-          x: 20 * index,
-          y: 20 * index,
-          width: 200,
-          height: 150,
-        }));
+        id: track.participant.sid,
+        x: 20 * index,
+        y: 20 * index,
+        width: 200,
+        height: 150,
+      }));
   });
 
   useEffect(() => {
@@ -173,7 +173,7 @@ const DraggableResizableVideo = ({
 
   drag(drop(ref));
   resize(resizeRef);
-
+  console.log(track.participant);
   return (
     <div
       ref={ref}
@@ -185,11 +185,10 @@ const DraggableResizableVideo = ({
         opacity: isDragging ? 0.5 : 1,
         transition: "opacity 0.2s ease",
       }}
-      className={`bg-gray-800 rounded-lg overflow-hidden relative group pointer-events-auto ${
-        track.participant.isSpeaking
-          ? "border-green-300 shadow-green-600 shadow-xl border-2"
-          : "border-none"
-      }`}
+      className={`bg-gray-800 rounded-lg overflow-hidden relative group pointer-events-auto ${track.participant.isSpeaking
+        ? "border-green-300 shadow-green-600 shadow-xl border-2"
+        : "border-none"
+        }`}
     >
       {/* Drag Handle */}
       <div
@@ -201,7 +200,7 @@ const DraggableResizableVideo = ({
 
       {/* Identity Label */}
       <h1 className="absolute bg-white text-black bottom-3 left-2 z-10">
-        {track.participant.identity}{" "}
+        {track.participant.name}{" "}
         {track.publication?.isSubscribed ? "(Sub)" : "(Unsub)"}
       </h1>
 
