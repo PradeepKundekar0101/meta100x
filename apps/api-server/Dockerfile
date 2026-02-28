@@ -1,8 +1,8 @@
-FROM node:20-alpine AS builder
+FROM node:20-slim
 
 WORKDIR /app
 
-RUN apk add --no-cache openssl
+RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
@@ -19,7 +19,6 @@ COPY apps/api-server ./apps/api-server
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @repo/db exec prisma generate
-
 
 WORKDIR /app/apps/api-server
 RUN npm run build
