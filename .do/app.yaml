@@ -1,0 +1,21 @@
+name: meta100x-api
+region: blr
+services:
+  - name: api-server
+    dockerfile_path: apps/api-server/Dockerfile
+    github:
+      repo: PradeepKundekar0101/meta100x
+      branch: main
+      deploy_on_push: true
+    http_port: 8001
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /
+    envs:
+      - key: DATABASE_URL
+        type: SECRET
+        scope: RUN_AND_BUILD_TIME
+      - key: PORT
+        value: "8001"
+        scope: RUN_TIME
