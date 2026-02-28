@@ -1,8 +1,7 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -11,15 +10,12 @@ import avatarData from "@/mock/avatars.json";
 import { login } from "@/store/slices/authSlice";
 import {
   Check,
-  ChevronLeft,
-  ChevronRight,
-  Gamepad2,
   Loader2,
-  Hash,
-  Users,
+  ArrowLeft,
+  ArrowRight,
   Search,
 } from "lucide-react";
-import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const JoinRoom = () => {
   const [searchParams] = useSearchParams();
@@ -40,7 +36,6 @@ const JoinRoom = () => {
     user?.avatarId
   );
   const [loading, setLoading] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const prevAvatarId = user?.avatarId;
 
@@ -53,8 +48,7 @@ const JoinRoom = () => {
     try {
       const { data } = await api.get(`/room/code/${roomCode}`);
       setRoomDetails(data.data);
-      console.log(data.data);
-      toast.success("Room details loaded!");
+      toast.success("Room found!");
     } catch (error) {
       toast.error("Failed to fetch room details");
       console.log(error);
@@ -103,189 +97,163 @@ const JoinRoom = () => {
     }
   }, [searchParams]);
 
-  const scroll = (direction: "left" | "right") => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = 200;
-      const newScrollLeft =
-        scrollContainerRef.current.scrollLeft +
-        (direction === "left" ? -scrollAmount : scrollAmount);
-      scrollContainerRef.current.scrollTo({
-        left: newScrollLeft,
-        behavior: "smooth",
-      });
-    }
-  };
-
   return (
-    <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
-      <div className="text-center mb-10 space-y-2">
-        <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
-          Join a{" "}
-          <span className="text-primaryBlue italic font-medium">Space</span>
-        </h1>
-        <p className="text-lg text-gray-500">
-          Enter a room code and jump into the action!
-        </p>
-      </div>
+    <div className="min-h-screen w-full bg-background">
+      <div className="max-w-2xl mx-auto px-4 pt-20 pb-16">
+        {/* Back link */}
+        <button
+          onClick={() => navigate("/myrooms")}
+          className="inline-flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 transition-colors mb-10 group"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          Back to spaces
+        </button>
 
-      <Card className="max-w-4xl w-full border-none bg-white/80 backdrop-blur-sm overflow-hidden">
-        <CardContent className="p-8">
-          <div className="mb-8">
-            <Label className="text-base font-semibold text-gray-800 mb-2 block">
-              Room Code
-            </Label>
-            <div className="flex gap-3">
-              <div className="relative flex-1">
-                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <Input
-                  name="roomCode"
-                  placeholder="Enter code here..."
-                  value={roomCode}
-                  onChange={(e) => setRoomCode(e.target.value)}
-                  className="pl-10 h-12 text-lg bg-gray-50 border-gray-200 focus:bg-white transition-colors"
-                  onKeyDown={(e) => e.key === "Enter" && fetchRoomDetails()}
-                />
-              </div>
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="text-2xl font-semibold text-white tracking-tight">
+            Join a space
+          </h1>
+          <p className="text-sm text-white/35 mt-1.5 leading-relaxed">
+            Enter a room code to find and join an existing space.
+          </p>
+        </div>
+
+        <div className="space-y-8">
+          {/* Room code input */}
+          <div className="space-y-2.5">
+            <label className="text-[13px] font-medium text-white/50 block">
+              Room code
+            </label>
+            <div className="flex gap-2">
+              <Input
+                name="roomCode"
+                placeholder="Enter room code..."
+                value={roomCode}
+                onChange={(e) => setRoomCode(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && fetchRoomDetails()}
+                className="h-12 text-[15px] px-4 bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/20 focus:border-primaryBlue/40 focus:bg-white/[0.06] focus:ring-1 focus:ring-primaryBlue/20 transition-all duration-200 rounded-xl font-mono tracking-wide"
+              />
               <Button
                 onClick={fetchRoomDetails}
-                className="h-12 px-6 bg-primaryBlue hover:bg-primaryBlue/90"
                 disabled={loading || !roomCode}
+                className="h-12 px-4 rounded-xl bg-white/[0.06] border border-white/[0.08] hover:bg-white/[0.1] text-white/60 hover:text-white transition-all duration-200"
+                variant="ghost"
               >
                 {loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Search className="h-5 w-5" />
+                  <Search className="h-4 w-4" />
                 )}
               </Button>
             </div>
           </div>
 
+          {/* Room details */}
           {roomDetails && (
-            <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-              <div className="bg-blue-50/50 rounded-2xl p-6 border border-blue-100">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-white rounded-xl shadow-sm">
-                    <Users className="h-6 w-6 text-primaryBlue" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">
+            <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2.5">
+                    <h3 className="text-[15px] font-medium text-white truncate">
                       {roomDetails.roomName}
-                    </h2>
-                    <div className="mt-1 flex flex-col gap-1 text-sm text-gray-600">
-                      <p>
-                        Hosted by{" "}
-                        <span className="font-medium text-gray-900">
-                          {roomDetails.creator.userName}
-                        </span>
-                      </p>
-                      <p className="text-gray-400 text-xs">
-                        {roomDetails.creator.email}
-                      </p>
-                    </div>
+                    </h3>
+                    <span className="flex-shrink-0 w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
                   </div>
+                  <p className="text-xs text-white/35 mt-0.5">
+                    Hosted by{" "}
+                    <span className="text-white/55">
+                      {roomDetails.creator.userName}
+                    </span>
+                    <span className="text-white/20 mx-1.5">&middot;</span>
+                    <span className="text-white/25">
+                      {roomDetails.creator.email}
+                    </span>
+                  </p>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="space-y-4 mb-8">
-            <div className="flex items-center gap-2">
-              <Gamepad2 className="h-5 w-5 text-primaryBlue" />
-              <Label className="text-base font-semibold text-gray-800">
-                Choose Your Character
-              </Label>
+          {/* Avatar selection */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-[13px] font-medium text-white/50">
+                Choose avatar
+              </label>
+              <span className="text-[11px] text-white/25">
+                {avatarData.length} characters
+              </span>
             </div>
 
-            <div className="relative group/carousel">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white shadow-md rounded-full transition-all hover:scale-110"
-                onClick={() => scroll("left")}
-              >
-                <ChevronLeft className="h-6 w-6 text-gray-700" />
-              </Button>
+            <div className="grid grid-cols-4 gap-2.5">
+              {avatarData.map((avatar) => (
+                <button
+                  key={avatar.id}
+                  type="button"
+                  onClick={() => setSelectedAvatar(avatar.id)}
+                  className={cn(
+                    "group relative rounded-xl overflow-hidden aspect-square outline-none ring-1 transition-all duration-200",
+                    selectedAvatar === avatar.id
+                      ? "ring-primaryBlue/60 shadow-lg shadow-primaryBlue/10 scale-[1.03] z-10"
+                      : "ring-white/[0.07] hover:ring-white/[0.15] opacity-70 hover:opacity-100"
+                  )}
+                >
+                  <img
+                    src={"/" + avatar.thumbnail}
+                    alt={avatar.name}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
 
-              <div
-                ref={scrollContainerRef}
-                className="flex gap-4 overflow-x-auto pb-8 pt-4 px-4 snap-x scrollbar-hide no-scrollbar"
-                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-              >
-                {avatarData.map((avatar) => (
                   <div
-                    key={avatar.id}
-                    onClick={() => setSelectedAvatar(avatar.id)}
-                    className={`
-                      relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer rounded-2xl overflow-hidden border-2 flex-shrink-0
-                      ${
-                        selectedAvatar === avatar.id
-                          ? "w-[200px] sm:w-[240px] grayscale-0 border-primaryBlue shadow-2xl scale-105 z-10"
-                          : "w-[60px] sm:w-[80px] grayscale hover:grayscale-0 hover:w-[100px] border-transparent opacity-60 hover:opacity-100"
-                      }
-                      h-[320px]
-                      snap-center
-                    `}
-                  >
-                    <div className="absolute inset-0 bg-gray-900">
-                      <img
-                        src={"/" + avatar.thumbnail}
-                        alt={avatar.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity duration-300 ${
-                          selectedAvatar === avatar.id
-                            ? "opacity-80"
-                            : "opacity-40"
-                        }`}
-                      />
-                    </div>
+                    className={cn(
+                      "absolute inset-0 transition-colors duration-200",
+                      selectedAvatar === avatar.id
+                        ? "bg-primaryBlue/10"
+                        : "bg-black/30 group-hover:bg-black/15"
+                    )}
+                  />
 
-                    <div
-                      className={`
-                      absolute bottom-0 left-0 right-0 p-4 transition-all duration-300
-                      ${
-                        selectedAvatar === avatar.id
-                          ? "translate-y-0 opacity-100"
-                          : "translate-y-4 opacity-0"
-                      }
-                    `}
-                    >
-                      <span className="text-white font-bold text-xl block tracking-wide uppercase">
-                        {avatar.name}
-                      </span>
-                      {selectedAvatar === avatar.id && (
-                        <div className="mt-2 flex items-center gap-2 text-primaryBlue font-medium text-sm animate-in fade-in slide-in-from-bottom-2">
-                          <Check className="w-4 h-4" /> Selected
-                        </div>
-                      )}
+                  {/* Selected check */}
+                  <div
+                    className={cn(
+                      "absolute top-2 right-2 transition-all duration-150",
+                      selectedAvatar === avatar.id
+                        ? "opacity-100 scale-100"
+                        : "opacity-0 scale-75"
+                    )}
+                  >
+                    <div className="bg-primaryBlue text-white p-1 rounded-full shadow-md">
+                      <Check className="w-2.5 h-2.5" strokeWidth={3} />
                     </div>
                   </div>
-                ))}
-              </div>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white shadow-md rounded-full transition-all hover:scale-110"
-                onClick={() => scroll("right")}
-              >
-                <ChevronRight className="h-6 w-6 text-gray-700" />
-              </Button>
+                  {/* Name label */}
+                  <div className="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/70 to-transparent">
+                    <span className="text-[11px] font-medium text-white/80 block text-center">
+                      {avatar.name}
+                    </span>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 
+          {/* Divider */}
+          <div className="border-t border-white/[0.06]" />
+
+          {/* Join button */}
           <Button
             onClick={handleJoinRoom}
-            className="w-full h-14 text-lg font-bold bg-primaryBlue hover:bg-primaryBlue/90 shadow-lg shadow-primaryBlue/20 transition-all duration-300 hover:scale-[1.01]"
-            size="lg"
+            className="w-full h-12 text-sm font-medium rounded-xl bg-primaryBlue hover:bg-primaryBlue/90 text-white shadow-lg shadow-primaryBlue/20 hover:shadow-primaryBlue/30 transition-all duration-200 hover:-translate-y-px group disabled:opacity-40"
             disabled={!roomDetails || !selectedAvatar}
           >
-            {loading ? "Waiting for room..." : "Join Room"}
+            Join Space
+            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
           </Button>
-        </CardContent>
-      </Card>
-    </main>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -13,16 +13,20 @@ import { toast } from "sonner";
 import useAxios from "@/hooks/use-axios";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Check, Copy, ArrowRight, User } from "lucide-react";
+import { Check, Copy, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type CreateDialogProps = {
-    roomCode: string,
-    showDialog: boolean,
-    setShowDialog: React.Dispatch<React.SetStateAction<boolean>>
-}
+    roomCode: string;
+    showDialog: boolean;
+    setShowDialog: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
-export const CreateDialog: React.FC<CreateDialogProps> = ({ roomCode, showDialog, setShowDialog }) => {
+export const CreateDialog: React.FC<CreateDialogProps> = ({
+    roomCode,
+    showDialog,
+    setShowDialog,
+}) => {
     const api = useAxios();
     const [copied, setCopied] = useState(false);
     const { user, token } = useAppSelector((state) => state.auth);
@@ -72,111 +76,123 @@ export const CreateDialog: React.FC<CreateDialogProps> = ({ roomCode, showDialog
 
     return (
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
-            <DialogContent className="sm:max-w-4xl border-none shadow-2xl max-h-[90vh] flex flex-col p-0 gap-0 bg-background/95 backdrop-blur-xl overflow-hidden">
-
-                {/* Header Section */}
-                <div className="p-8 pb-6 border-b border-border/40 bg-muted/20">
-                    <DialogHeader className="space-y-4">
-                        <div className="flex flex-col items-center text-center space-y-2">
-                            <div className="p-3 rounded-full bg-green-500/10 text-green-500 mb-2">
-                                <Check className="w-8 h-8" />
+            <DialogContent className="sm:max-w-lg border border-white/[0.08] shadow-2xl max-h-[90vh] flex flex-col p-0 gap-0 bg-[#0a0a0a] overflow-hidden rounded-2xl">
+                {/* Header */}
+                <div className="px-6 pt-6 pb-5 border-b border-white/[0.06]">
+                    <DialogHeader className="space-y-3">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                                <Check className="w-4 h-4 text-emerald-400" />
                             </div>
-                            <DialogTitle className="text-3xl font-orbitron font-bold tracking-wide">
-                                Space Ready!
-                            </DialogTitle>
-                            <p className="text-muted-foreground text-lg max-w-md">
-                                Your virtual universe has been created.
-                            </p>
+                            <div>
+                                <DialogTitle className="text-base font-semibold text-white">
+                                    Space created
+                                </DialogTitle>
+                                <p className="text-xs text-white/35 mt-0.5">
+                                    Share the invite code to let others join.
+                                </p>
+                            </div>
                         </div>
 
-                        {/* Room Code Card */}
-                        <div className="max-w-md mx-auto w-full mt-6">
-                            <div className="relative group overflow-hidden rounded-2xl border-2 border-primaryBlue/20 bg-background shadow-sm hover:shadow-md hover:border-primaryBlue/40 transition-all duration-300">
-                                <div className="flex items-center justify-between p-1 pl-5">
-                                    <div className="flex flex-col">
-                                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Invite Code</span>
-                                        <span className="text-2xl font-mono font-bold tracking-widest text-foreground">
-                                            {roomCode}
-                                        </span>
-                                    </div>
-                                    <Button
-                                        size="icon"
-                                        onClick={handleCopyRoomCode}
-                                        className={cn(
-                                            "h-12 w-12 rounded-xl transition-all duration-300",
-                                            copied ? "bg-green-500 hover:bg-green-600 text-white" : "bg-primaryBlue/10 text-primaryBlue hover:bg-primaryBlue hover:text-white"
-                                        )}
-                                    >
-                                        {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-                                    </Button>
-                                </div>
+                        {/* Room code row */}
+                        <div className="flex items-center justify-between rounded-xl bg-white/[0.04] border border-white/[0.07] px-4 py-3 mt-2">
+                            <div>
+                                <span className="text-[10px] font-medium text-white/30 uppercase tracking-widest block">
+                                    Invite Code
+                                </span>
+                                <span className="text-lg font-mono font-semibold text-white tracking-widest">
+                                    {roomCode}
+                                </span>
                             </div>
+                            <button
+                                onClick={handleCopyRoomCode}
+                                className={cn(
+                                    "p-2.5 rounded-lg transition-all duration-200",
+                                    copied
+                                        ? "bg-emerald-500/15 text-emerald-400"
+                                        : "bg-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.1]"
+                                )}
+                            >
+                                {copied ? (
+                                    <Check className="h-4 w-4" />
+                                ) : (
+                                    <Copy className="h-4 w-4" />
+                                )}
+                            </button>
                         </div>
                     </DialogHeader>
                 </div>
 
-                {/* Avatar Selection Grid */}
-                <div className="flex-1 overflow-y-auto p-8">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 rounded-lg bg-primaryBlue/10 text-primaryBlue">
-                            <User className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-semibold text-foreground">Choose Identity</h2>
-                            <p className="text-sm text-muted-foreground">Select how you'll appear in the space</p>
-                        </div>
+                {/* Avatar selection */}
+                <div className="flex-1 overflow-y-auto px-6 py-5">
+                    <div className="flex items-center justify-between mb-3">
+                        <label className="text-[13px] font-medium text-white/50">
+                            Choose avatar
+                        </label>
+                        <span className="text-[11px] text-white/25">
+                            {avatarData.length} characters
+                        </span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-4 gap-2.5">
                         {avatarData.map((avatar) => (
-                            <div
+                            <button
                                 key={avatar.id}
+                                type="button"
                                 onClick={() => setSelectedAvatar(avatar.id)}
                                 className={cn(
-                                    "group relative cursor-pointer rounded-2xl overflow-hidden transition-all duration-300 aspect-square",
+                                    "group relative rounded-xl overflow-hidden aspect-square outline-none ring-1 transition-all duration-200",
                                     selectedAvatar === avatar.id
-                                        ? "ring-4 ring-primaryBlue ring-offset-2 ring-offset-background shadow-xl scale-[1.02]"
-                                        : "hover:ring-2 hover:ring-primaryBlue/50 hover:shadow-lg hover:-translate-y-1 opacity-80 hover:opacity-100"
+                                        ? "ring-primaryBlue/60 shadow-lg shadow-primaryBlue/10 scale-[1.03] z-10"
+                                        : "ring-white/[0.07] hover:ring-white/[0.15] opacity-70 hover:opacity-100"
                                 )}
                             >
-                                <div className="absolute inset-0 bg-muted">
-                                    <img
-                                        src={avatar.thumbnail}
-                                        alt={avatar.name}
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
+                                <img
+                                    src={avatar.thumbnail}
+                                    alt={avatar.name}
+                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+
+                                <div
+                                    className={cn(
+                                        "absolute inset-0 transition-colors duration-200",
+                                        selectedAvatar === avatar.id
+                                            ? "bg-primaryBlue/10"
+                                            : "bg-black/30 group-hover:bg-black/15"
+                                    )}
+                                />
+
+                                <div
+                                    className={cn(
+                                        "absolute top-1.5 right-1.5 transition-all duration-150",
+                                        selectedAvatar === avatar.id
+                                            ? "opacity-100 scale-100"
+                                            : "opacity-0 scale-75"
+                                    )}
+                                >
+                                    <div className="bg-primaryBlue text-white p-0.5 rounded-full shadow-md">
+                                        <Check className="w-2.5 h-2.5" strokeWidth={3} />
+                                    </div>
                                 </div>
 
-                                {/* Overlay & Selection Indicator */}
-                                <div className={cn(
-                                    "absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300",
-                                    selectedAvatar === avatar.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                )} />
-
-                                {selectedAvatar === avatar.id && (
-                                    <div className="absolute top-2 right-2 bg-primaryBlue text-white p-1.5 rounded-full shadow-lg animate-in fade-in zoom-in duration-200">
-                                        <Check className="w-3 h-3" strokeWidth={4} />
-                                    </div>
-                                )}
-
-                                <div className="absolute bottom-0 left-0 right-0 p-3 text-white transform transition-transform duration-300 translate-y-2 group-hover:translate-y-0">
-                                    <span className="text-sm font-bold tracking-wide text-shadow-sm block text-center">
+                                <div className="absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black/70 to-transparent">
+                                    <span className="text-[10px] font-medium text-white/80 block text-center">
                                         {avatar.name}
                                     </span>
                                 </div>
-                            </div>
+                            </button>
                         ))}
                     </div>
                 </div>
 
-                {/* Footer Action */}
-                <div className="p-6 border-t border-border/40 bg-muted/20 backdrop-blur-sm">
+                {/* Footer */}
+                <div className="px-6 pb-6 pt-2">
                     <Button
                         onClick={handleJoinRoom}
-                        className="w-full h-14 text-lg font-medium rounded-xl bg-primaryBlue hover:bg-primaryBlue/90 shadow-lg shadow-primaryBlue/25 hover:shadow-primaryBlue/40 transition-all duration-300 hover:-translate-y-0.5 group"
+                        className="w-full h-11 text-sm font-medium rounded-xl bg-primaryBlue hover:bg-primaryBlue/90 text-white shadow-lg shadow-primaryBlue/20 hover:shadow-primaryBlue/30 transition-all duration-200 hover:-translate-y-px group"
                     >
                         Enter Space
-                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                     </Button>
                 </div>
             </DialogContent>

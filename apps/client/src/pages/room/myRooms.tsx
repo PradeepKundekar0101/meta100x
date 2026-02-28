@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import {
   Edit,
   Trash2,
-  Plus,
   Loader2,
   Copy,
   Map as MapIcon,
   MoreVertical,
+  ArrowRight,
+  Plus,
+  ExternalLink,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import useAxios from "@/hooks/use-axios";
@@ -19,7 +21,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
@@ -27,142 +28,27 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import mapData from "@/mock/mapData.json";
-import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "react-router-dom";
 
-const CreateSpaceDialog = () => {
-  const { toast } = useToast();
-  const api = useAxios();
-  const queryClient = useQueryClient();
-  const { user } = useAppSelector((state) => state.auth);
-
-  const [roomName, setRoomName] = React.useState("");
-  const [open, setOpen] = React.useState(false);
-  const [selectedMapId, setSelectedMapId] = React.useState(mapData[0]?.mapId);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-
-  const handleCreate = async () => {
-    if (!roomName.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Space name is required.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await api.post("/room", {
-        roomName,
-        mapId: selectedMapId,
-        creatorId: user?.id,
-      });
-      queryClient.invalidateQueries({ queryKey: ["myspaces"] });
-      toast({
-        title: "Space Created",
-        description: "A new space has been successfully added.",
-      });
-      setRoomName("");
-      setOpen(false);
-    } catch (error) {
-      console.log(error);
-      toast({
-        title: "Error",
-        description: "Failed to create a new space.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Create Space
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[525px]">
-        <DialogHeader>
-          <DialogTitle>Create New Space</DialogTitle>
-          <DialogDescription>
-            Give your space a name and choose a map template.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="roomName">Space Name</Label>
-            <Input
-              id="roomName"
-              placeholder="e.g., Weekly Standup, Chill Zone"
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Select Map</Label>
-            <div className="grid grid-cols-2 gap-4">
-              {mapData.map((map) => (
-                <div
-                  key={map.mapId}
-                  className={cn(
-                    "cursor-pointer border rounded-lg overflow-hidden relative transition-all",
-                    selectedMapId === map.mapId
-                      ? "ring-2 ring-primary border-primary"
-                      : "hover:border-primary/50"
-                  )}
-                  onClick={() => setSelectedMapId(map.mapId)}
-                >
-                  <img
-                    src={`/${map.thumbnail}`}
-                    alt={map.title}
-                    className="w-full h-24 object-cover"
-                  />
-                  <div className="p-2 bg-card">
-                    <p className="font-medium text-sm">{map.title}</p>
-                  </div>
-                  {selectedMapId === map.mapId && (
-                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
-                      <MapIcon className="h-3 w-3" />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleCreate} disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Space
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-const SpaceCard = ({ space }: { space: Space }) => {
+const SpaceRow = ({
+  space,
+  index,
+}: {
+  space: Space;
+  index: number;
+}) => {
   const { toast } = useToast();
   const api = useAxios();
   const queryClient = useQueryClient();
   const [isEditOpen, setIsEditOpen] = React.useState(false);
 
-  // Delete Space Mutation
   const deleteMutation = useMutation({
     mutationFn: async (spaceId: string) => {
       return await api.delete(`/room/${spaceId}`);
@@ -183,7 +69,6 @@ const SpaceCard = ({ space }: { space: Space }) => {
     },
   });
 
-  // Edit Space Mutation
   const editMutation = useMutation({
     mutationFn: async ({
       spaceId,
@@ -210,7 +95,6 @@ const SpaceCard = ({ space }: { space: Space }) => {
     },
   });
 
-  // Toggle Active Status Mutation
   const toggleActiveMutation = useMutation({
     mutationFn: async (spaceId: string) => {
       return await api.put(`/room/toggleActive/${spaceId}`);
@@ -236,6 +120,11 @@ const SpaceCard = ({ space }: { space: Space }) => {
     return map ? `/${map.thumbnail}` : null;
   };
 
+  const getMapName = (mapId: string) => {
+    const map = mapData.find((m) => m.mapId === mapId);
+    return map?.title ?? "Unknown";
+  };
+
   const copyRoomCode = (code: string) => {
     navigator.clipboard.writeText(code);
     toast({
@@ -244,7 +133,6 @@ const SpaceCard = ({ space }: { space: Space }) => {
     });
   };
 
-  // Edit Space Dialog Component (Local to SpaceCard to avoid prop drilling complex states)
   const EditSpaceDialog = ({
     open,
     setOpen,
@@ -256,13 +144,8 @@ const SpaceCard = ({ space }: { space: Space }) => {
 
     const handleEdit = () => {
       editMutation.mutate(
-        {
-          spaceId: space.id,
-          roomName,
-        },
-        {
-          onSuccess: () => setOpen(false),
-        }
+        { spaceId: space.id, roomName },
+        { onSuccess: () => setOpen(false) }
       );
     };
 
@@ -302,105 +185,138 @@ const SpaceCard = ({ space }: { space: Space }) => {
   };
 
   return (
-    <Card className="overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-      <div className="relative h-40 bg-muted">
-        {getMapThumbnail(space.mapId) ? (
-          <img
-            src={getMapThumbnail(space.mapId)!}
-            alt={space.roomName}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            <MapIcon className="h-12 w-12 opacity-20" />
-          </div>
-        )}
-        <div className="absolute top-2 right-2">
-          <Badge
-            variant={space.isActive ? "default" : "secondary"}
-            className={space.isActive ? "bg-green-500 hover:bg-green-600" : ""}
-          >
-            {space.isActive ? "Active" : "Inactive"}
-          </Badge>
-        </div>
-      </div>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-xl truncate" title={space.roomName}>
-              {space.roomName}
-            </CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
-              Created {new Date(space.createdAt).toLocaleDateString()}
-            </p>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
-                <Edit className="mr-2 h-4 w-4" /> Edit Details
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => copyRoomCode(space.roomCode)}>
-                <Copy className="mr-2 h-4 w-4" /> Copy Room Code
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => deleteMutation.mutate(space.id)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete Space
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-grow pt-0">
-        <div className="space-y-4 mt-2">
-          <div className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
-            <span className="text-sm font-medium">Room Code</span>
-            <div className="flex items-center gap-2">
-              <code className="text-xs bg-background px-2 py-1 rounded border">
-                {space.roomCode}
-              </code>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => copyRoomCode(space.roomCode)}
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
+    <>
+      <div
+        className="group grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_minmax(100px,auto)_minmax(100px,auto)_auto_auto] items-center gap-4 md:gap-6 px-4 md:px-6 py-4 border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors duration-200"
+        style={{ animationDelay: `${index * 60}ms` }}
+      >
+        {/* Thumbnail + Name */}
+        <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden bg-white/[0.05] flex-shrink-0 ring-1 ring-white/[0.08]">
+          {getMapThumbnail(space.mapId) ? (
+            <img
+              src={getMapThumbnail(space.mapId)!}
+              alt={space.roomName}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <MapIcon className="h-5 w-5 text-white/20" />
             </div>
-          </div>
+          )}
+        </div>
 
-          <div className="flex items-center justify-between">
-            <Label
-              htmlFor={`active-${space.id}`}
-              className="text-sm cursor-pointer"
-            >
-              Space Active
-            </Label>
-            <Switch
-              id={`active-${space.id}`}
-              checked={space.isActive}
-              onCheckedChange={() => toggleActiveMutation.mutate(space.id)}
-              disabled={toggleActiveMutation.isPending}
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5">
+            <h3 className="text-[15px] font-medium text-white truncate">
+              {space.roomName}
+            </h3>
+            <span
+              className={`flex-shrink-0 w-2 h-2 rounded-full ${
+                space.isActive
+                  ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"
+                  : "bg-white/20"
+              }`}
             />
           </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-xs text-white/40">{getMapName(space.mapId)}</span>
+            <span className="text-white/20 text-[10px]">&middot;</span>
+            <span className="text-xs text-white/30">
+              {new Date(space.createdAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </span>
+          </div>
         </div>
+
+        {/* Room code — hidden on mobile, shown in dropdown */}
+        <div className="hidden md:flex items-center gap-1.5">
+          <code className="text-xs font-mono text-white/50 bg-white/[0.05] px-2.5 py-1 rounded-md border border-white/[0.06]">
+            {space.roomCode}
+          </code>
+          <button
+            onClick={() => copyRoomCode(space.roomCode)}
+            className="p-1 rounded-md text-white/30 hover:text-white/70 hover:bg-white/[0.05] transition-colors"
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        {/* Toggle — hidden on mobile */}
+        <div className="hidden md:flex items-center gap-2">
+          <Switch
+            id={`active-${space.id}`}
+            checked={space.isActive}
+            onCheckedChange={() => toggleActiveMutation.mutate(space.id)}
+            disabled={toggleActiveMutation.isPending}
+            className="scale-90"
+          />
+          <label
+            htmlFor={`active-${space.id}`}
+            className="text-xs text-white/40 cursor-pointer select-none"
+          >
+            {space.isActive ? "Active" : "Inactive"}
+          </label>
+        </div>
+
+        {/* Join button */}
         <Button
-          className="w-full mt-4 rounded-full border-primaryBlue text-primaryBlue"
-          variant={"outline"}
+          size="sm"
+          variant="ghost"
+          className="hidden md:inline-flex text-primaryBlue hover:text-primaryBlue hover:bg-primaryBlue/10 gap-1.5 text-xs font-medium rounded-lg px-3"
           asChild
         >
-          <Link to={`/space/${space.roomCode}`}>Join Space</Link>
+          <Link to={`/space/${space.roomCode}`}>
+            Join
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </Button>
-        <EditSpaceDialog open={isEditOpen} setOpen={setIsEditOpen} />
-      </CardContent>
-    </Card>
+
+        {/* Actions dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1.5 rounded-md text-white/30 hover:text-white/60 hover:bg-white/[0.05] transition-colors">
+              <MoreVertical className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem asChild className="md:hidden">
+              <Link to={`/space/${space.roomCode}`}>
+                <ExternalLink className="mr-2 h-4 w-4" /> Join Space
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="md:hidden"
+              onClick={() => copyRoomCode(space.roomCode)}
+            >
+              <Copy className="mr-2 h-4 w-4" /> Copy Code: {space.roomCode}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="md:hidden" />
+            <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
+              <Edit className="mr-2 h-4 w-4" /> Edit Details
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="md:hidden"
+              onClick={() => toggleActiveMutation.mutate(space.id)}
+            >
+              <MapIcon className="mr-2 h-4 w-4" />
+              {space.isActive ? "Deactivate" : "Activate"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-red-400 focus:text-red-400 focus:bg-red-400/10"
+              onClick={() => deleteMutation.mutate(space.id)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete Space
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <EditSpaceDialog open={isEditOpen} setOpen={setIsEditOpen} />
+    </>
   );
 };
 
@@ -409,7 +325,7 @@ const MyRooms = () => {
   const queryClient = useQueryClient();
   const { user } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
-  // Fetch Spaces
+
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["myspaces"],
     queryFn: async () => {
@@ -420,7 +336,7 @@ const MyRooms = () => {
   if (isLoading) {
     return (
       <div className="flex h-[50vh] w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-6 w-6 animate-spin text-primaryBlue" />
       </div>
     );
   }
@@ -428,13 +344,17 @@ const MyRooms = () => {
   if (isError) {
     return (
       <div className="flex h-[50vh] flex-col items-center justify-center gap-4 text-center">
-        <div className="text-destructive font-medium">Error loading spaces</div>
-        <p className="text-muted-foreground">{(error as Error).message}</p>
+        <div className="text-red-400 font-medium text-sm">
+          Error loading spaces
+        </div>
+        <p className="text-white/40 text-sm">{(error as Error).message}</p>
         <Button
           variant="outline"
+          size="sm"
           onClick={() =>
             queryClient.invalidateQueries({ queryKey: ["myspaces"] })
           }
+          className="border-white/10 text-white/60 hover:text-white hover:bg-white/[0.05]"
         >
           Retry
         </Button>
@@ -442,54 +362,85 @@ const MyRooms = () => {
     );
   }
 
+  const spaces: Space[] = data?.data ?? [];
+
   return (
-    <main className="container mx-auto px-4 pt-20 max-w-7xl">
-      <div className="flex relative flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+    <main className="container mx-auto px-4 pt-20 pb-12 max-w-5xl">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-10 gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            My{" "}
-            <span className=" text-primaryBlue font-medium italic">Spaces</span>
+          <h1 className="text-2xl text-white font-semibold tracking-tight">
+            My Spaces
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your virtual spaces and rooms.
+          <p className="text-white/40 text-sm mt-1">
+            {spaces.length} space{spaces.length !== 1 && "s"} &middot; Manage
+            your virtual rooms
           </p>
         </div>
-        <div>
+        <div className="flex items-center gap-2">
           <Button
-            variant={"outline"}
-            onClick={() => {
-              navigate("/space/join");
-            }}
-            className="mx-2"
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/space/join")}
+            className="text-white/50 hover:text-white hover:bg-white/[0.05] text-xs font-medium rounded-lg"
           >
-            Join by room ID
+            Join by code
           </Button>
           <Button
-            onClick={() => {
-              navigate("/createroom");
-            }}
+            size="sm"
+            onClick={() => navigate("/createroom")}
+            className="bg-primaryBlue hover:bg-primaryBlue/90 text-white text-xs font-medium rounded-lg gap-1.5 shadow-lg shadow-primaryBlue/20"
           >
-            Create a space
+            <Plus className="h-3.5 w-3.5" />
+            New Space
           </Button>
         </div>
       </div>
 
-      {data?.data && data.data.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed rounded-xl bg-muted/30">
-          <div className="bg-muted p-4 rounded-full mb-4">
-            <MapIcon className="h-8 w-8 text-muted-foreground" />
+      {spaces.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-white/[0.08] rounded-2xl bg-white/[0.01]">
+          <div className="bg-white/[0.04] p-5 rounded-2xl mb-5 ring-1 ring-white/[0.06]">
+            <MapIcon className="h-7 w-7 text-white/20" />
           </div>
-          <h3 className="text-xl font-semibold mb-2">No spaces yet</h3>
-          <p className="text-muted-foreground mb-6 max-w-sm">
+          <h3 className="text-base text-white font-medium mb-1.5">
+            No spaces yet
+          </h3>
+          <p className="text-white/35 text-sm mb-6 max-w-xs leading-relaxed">
             Create your first space to start hosting virtual meetings and
             hangouts.
           </p>
-          <CreateSpaceDialog />
+          <Button
+            size="sm"
+            onClick={() => navigate("/createroom")}
+            className="bg-primaryBlue hover:bg-primaryBlue/90 text-white text-xs font-medium rounded-lg gap-1.5"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Create Space
+          </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {data?.data.map((space: Space) => (
-            <SpaceCard key={space.id} space={space} />
+        <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden backdrop-blur-sm">
+          {/* Table header */}
+          <div className="hidden md:grid grid-cols-[auto_1fr_minmax(100px,auto)_minmax(100px,auto)_auto_auto] items-center gap-6 px-6 py-3 border-b border-white/[0.06] bg-white/[0.02]">
+            <div className="w-12" />
+            <span className="text-[11px] font-medium text-white/30 uppercase tracking-wider">
+              Space
+            </span>
+            <span className="text-[11px] font-medium text-white/30 uppercase tracking-wider">
+              Room Code
+            </span>
+            <span className="text-[11px] font-medium text-white/30 uppercase tracking-wider">
+              Status
+            </span>
+            <span className="text-[11px] font-medium text-white/30 uppercase tracking-wider">
+              &nbsp;
+            </span>
+            <span className="w-7" />
+          </div>
+
+          {/* Rows */}
+          {spaces.map((space: Space, i: number) => (
+            <SpaceRow key={space.id} space={space} index={i} />
           ))}
         </div>
       )}
