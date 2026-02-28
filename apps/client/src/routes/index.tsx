@@ -73,9 +73,7 @@ const router = createBrowserRouter([
         path: "space/:roomCode",
         element: (
           <Suspense fallback={<Loader />}>
-            <ProtectedRoute>
-              <Room />
-            </ProtectedRoute>
+            <Room />
           </Suspense>
         ),
       },
@@ -84,9 +82,7 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loader />}>
             <RootLayout>
-              <ProtectedRoute>
-                <JoinRoom />
-              </ProtectedRoute>
+              <JoinRoom />
             </RootLayout>
           </Suspense>
         ),

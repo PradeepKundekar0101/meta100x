@@ -30,41 +30,67 @@ export class User {
           JSON.parse(data.toString());
         switch (type) {
           case "JOIN_SPACE":
-            const { roomId, token } = payload;
+            const { roomId, token, guestName, avatarId: guestAvatarId } = payload;
             console.log("JOIN_SPACE");
-            if (!roomId || !token) {
+            if (!roomId) {
               this.sendMessage(
                 JSON.stringify({
                   type: "error",
-                  message: "No room id or token",
-                })
-              );
-              this.ws.close();
-            }
-            const tokenVerify = verify(token, JWT_SECRET) as JwtPayload;
-            if (!tokenVerify) {
-              this.sendMessage(
-                JSON.stringify({
-                  type: "error",
-                  message: "Invalid token",
-                })
-              );
-              this.ws.close();
-            }
-            const userId = tokenVerify.userId;
-            const userFromDb = await prismaClient.user.findUnique({
-              where: { id: userId! },
-            });
-            if (!userFromDb) {
-              this.sendMessage(
-                JSON.stringify({
-                  type: "error",
-                  message: "User not found",
+                  message: "No room id",
                 })
               );
               this.ws.close();
               return;
             }
+
+            let resolvedUserName: string;
+            let resolvedUserId: string;
+            let resolvedAvatarId: string;
+
+            if (token) {
+              const tokenVerify = verify(token, JWT_SECRET) as JwtPayload;
+              if (!tokenVerify) {
+                this.sendMessage(
+                  JSON.stringify({
+                    type: "error",
+                    message: "Invalid token",
+                  })
+                );
+                this.ws.close();
+                return;
+              }
+              const userId = tokenVerify.userId;
+              const userFromDb = await prismaClient.user.findUnique({
+                where: { id: userId! },
+              });
+              if (!userFromDb) {
+                this.sendMessage(
+                  JSON.stringify({
+                    type: "error",
+                    message: "User not found",
+                  })
+                );
+                this.ws.close();
+                return;
+              }
+              resolvedUserName = userFromDb.userName;
+              resolvedUserId = userFromDb.id;
+              resolvedAvatarId = userFromDb.avatarId!;
+            } else if (guestName) {
+              resolvedUserName = guestName;
+              resolvedUserId = this.id;
+              resolvedAvatarId = guestAvatarId || "pajji";
+            } else {
+              this.sendMessage(
+                JSON.stringify({
+                  type: "error",
+                  message: "No token or guest name provided",
+                })
+              );
+              this.ws.close();
+              return;
+            }
+
             const roomFromDb = await prismaClient.room.findFirst({
               where: { roomCode: roomId },
             });
@@ -79,8 +105,7 @@ export class User {
               return;
             }
             this.roomId = roomFromDb.id;
-            const { userName, id, avatarId } = userFromDb;
-            this.user = { userName, id, avatarId: avatarId! };
+            this.user = { userName: resolvedUserName, id: resolvedUserId, avatarId: resolvedAvatarId };
             this.roomCode = roomId;
             this.playerX = 450;
             this.playerY = 1000;
@@ -167,25 +192,33 @@ export class User {
               userName: senderName,
               avatarId: senderAvatar,
             } = payload;
-            const tokenVerified = verify(senderToken, JWT_SECRET) as JwtPayload;
-            if (!tokenVerified) {
-              this.sendMessage(
-                JSON.stringify({
-                  type: "ERROR",
-                  message: "Invalid token",
-                })
-              );
-              this.ws.close();
+
+            let chatSenderId: string;
+            if (senderToken) {
+              const tokenVerified = verify(senderToken, JWT_SECRET) as JwtPayload;
+              if (!tokenVerified) {
+                this.sendMessage(
+                  JSON.stringify({
+                    type: "ERROR",
+                    message: "Invalid token",
+                  })
+                );
+                this.ws.close();
+                return;
+              }
+              chatSenderId = tokenVerified.userId;
+            } else {
+              chatSenderId = this.id;
             }
+
             const createdAt = new Date();
-            const senderId = tokenVerified.userId;
             const payloadToSend: any = {
-              senderId,
+              senderId: chatSenderId,
               content,
               userName: senderName,
               avatarId: senderAvatar,
               createdAt,
-              userId: senderId,
+              userId: chatSenderId,
               roomId: this.roomId,
             };
             RedisClient.getPublisher().publish(

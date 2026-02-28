@@ -16,6 +16,7 @@ import { WebSocketSingleton } from "@/utils/websocket";
 import { useAppSelector } from "@/store/hooks";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "@/hooks/use-axios";
+import axios from "axios";
 
 type TabId = "chat" | "people" | "details";
 
@@ -59,7 +60,7 @@ const SpaceSidebar: React.FC<SpaceSidebarProps> = ({
         }`}
     >
       <div className="h-full flex flex-col bg-[#0c0c14]/90 backdrop-blur-xl border-l border-white/[0.06]">
-        <SidebarHeader activeTab={activeTab} onTabChange={onTabChange} onClose={onClose} />
+        <SidebarHeader activeTab={activeTab} onTabChange={onTabChange} onClose={onClose} roomCode={roomCode} />
 
         <div className="flex-1 min-h-0">
           {activeTab === "chat" && <ChatPanel roomId={roomId} />}
@@ -77,7 +78,8 @@ const SidebarHeader: React.FC<{
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
   onClose: () => void;
-}> = ({ activeTab, onTabChange, onClose }) => (
+  roomCode: string;
+}> = ({ activeTab, onTabChange, onClose, roomCode }) => (
   <div className="shrink-0">
     <div className="flex items-center justify-between px-4 pt-4 pb-2">
       <span className="text-white/50 text-[11px] font-medium tracking-widest uppercase">
@@ -90,6 +92,15 @@ const SidebarHeader: React.FC<{
         <X size={16} />
       </button>
     </div>
+    <div>
+      <h1>Here is the Join url</h1>
+      <div className="flex items-center gap-2">
+        <span className="text-white/70 text-[13px] font-medium tracking-widest uppercase">{`https://usemetaworld.com/space/join?code=${roomCode}`}</span>
+        <button className="p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-colors">
+          <Copy size={16} />
+        </button>
+      </div>
+    </div>
     <div className="flex gap-1 px-3 pb-3 pt-3">
       {TAB_CONFIG.map(({ id, label, icon: Icon }) => {
         const isActive = activeTab === id;
@@ -98,8 +109,8 @@ const SidebarHeader: React.FC<{
             key={id}
             onClick={() => onTabChange(id)}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${isActive
-                ? "bg-[#6658fe]/15 text-[#a49bff] shadow-[inset_0_0_0_1px_rgba(102,88,254,0.2)]"
-                : "text-white/40 hover:text-white/60 hover:bg-white/[0.04]"
+              ? "bg-[#6658fe]/15 text-[#a49bff] shadow-[inset_0_0_0_1px_rgba(102,88,254,0.2)]"
+              : "text-white/40 hover:text-white/60 hover:bg-white/[0.04]"
               }`}
           >
             <Icon size={14} />
@@ -114,6 +125,10 @@ const SidebarHeader: React.FC<{
 
 const ChatPanel: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { user, token } = useAppSelector((state) => state.auth);
+  const isGuest = !user || !token;
+  const effectiveUserId = user?.id ?? localStorage.getItem("guestId") ?? "guest";
+  const effectiveUserName =
+    user?.userName ?? localStorage.getItem("guestName") ?? "Guest";
   const api = useAxios();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -121,7 +136,16 @@ const ChatPanel: React.FC<{ roomId: string }> = ({ roomId }) => {
 
   const { data } = useQuery({
     queryKey: ["chats"],
-    queryFn: async () => (await api.get("/chats/" + roomId)).data,
+    queryFn: async () => {
+      if (isGuest) {
+        return (
+          await axios.get(
+            `${import.meta.env.VITE_BASE_URL}/api/v1/chats/${roomId}`
+          )
+        ).data;
+      }
+      return (await api.get("/chats/" + roomId)).data;
+    },
   });
 
   const scrollToBottom = () => {
@@ -145,12 +169,12 @@ const ChatPanel: React.FC<{ roomId: string }> = ({ roomId }) => {
           createdAt: e.createdAt,
           content: e.content,
           id: e.sender.id,
-          isCurrentUser: e.sender.id === user?.id,
+          isCurrentUser: e.sender.id === effectiveUserId,
         })
       );
       setMessages(msg);
     }
-  }, [data, user?.id]);
+  }, [data, effectiveUserId]);
 
   useEffect(() => {
     const unsub = WebSocketSingleton.subscribe(
@@ -169,16 +193,16 @@ const ChatPanel: React.FC<{ roomId: string }> = ({ roomId }) => {
           {
             id: String(Date.now()),
             content,
-            userName: userId === user?.id ? "You" : userName,
+            userName: userId === effectiveUserId ? "You" : userName,
             createdAt,
             avatarId,
-            isCurrentUser: userId === user?.id,
+            isCurrentUser: userId === effectiveUserId,
           },
         ]);
       }
     );
     return () => unsub();
-  }, [user]);
+  }, [effectiveUserId]);
 
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
@@ -187,9 +211,9 @@ const ChatPanel: React.FC<{ roomId: string }> = ({ roomId }) => {
         JSON.stringify({
           type: "CHAT_MESSAGE_CLIENT",
           payload: {
-            token,
+            token: token ?? undefined,
             content: inputMessage,
-            userName: user?.userName,
+            userName: effectiveUserName,
             avatarId: localStorage.getItem("avatarId") || "pajji",
           },
         })
@@ -250,8 +274,8 @@ const ChatPanel: React.FC<{ roomId: string }> = ({ roomId }) => {
                   </div>
                   <div
                     className={`px-3 py-2 rounded-xl text-[13px] leading-relaxed ${message.isCurrentUser
-                        ? "bg-[#6658fe]/20 text-white/90 rounded-tr-sm"
-                        : "bg-white/[0.05] text-white/75 rounded-tl-sm"
+                      ? "bg-[#6658fe]/20 text-white/90 rounded-tr-sm"
+                      : "bg-white/[0.05] text-white/75 rounded-tl-sm"
                       }`}
                   >
                     {message.content}

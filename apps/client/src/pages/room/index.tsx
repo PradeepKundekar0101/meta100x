@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "@/hooks/use-axios";
+import axios from "axios";
 import {
   Plus,
   Minus,
@@ -30,8 +31,27 @@ import MeetingSubscriptionManager from "./meetingSubscriptionManager";
 const Room: React.FC = () => {
   const wsUrl = import.meta.env.VITE_LIVEKIT_WSS_URL;
   const { roomCode } = useParams();
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, token } = useAppSelector((state) => state.auth);
   const api = useAxios();
+  const isGuest = !user || !token;
+
+  const guestId = useMemo(
+    () =>
+      localStorage.getItem("guestId") ||
+      `guest-${crypto.randomUUID().slice(0, 8)}`,
+    []
+  );
+
+  const effectiveUser = useMemo(
+    () =>
+      user ?? {
+        id: guestId,
+        userName: localStorage.getItem("guestName") || "Guest",
+        avatarId: localStorage.getItem("avatarId") || "pajji",
+      },
+    [user, guestId]
+  );
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarTab, setSidebarTab] = useState<TabId>("chat");
   const [livekitToken, setLivekitToken] = useState<string>();
@@ -70,12 +90,19 @@ const Room: React.FC = () => {
   const { data, error, isError, isLoading } = useQuery({
     queryKey: ["room", roomCode],
     queryFn: async () => {
+      if (isGuest) {
+        return (
+          await axios.get(
+            `${import.meta.env.VITE_BASE_URL}/api/v1/room/code/${roomCode}`
+          )
+        ).data;
+      }
       return (await api.get("/room/code/" + roomCode)).data;
     },
   });
 
   const initWebSocket = useCallback(() => {
-    if (data?.data && user) {
+    if (data?.data && effectiveUser) {
       localStorage.setItem("roomId", roomCode!);
       if (data.data.mapId) {
         localStorage.setItem("mapId", data.data.mapId);
@@ -83,9 +110,9 @@ const Room: React.FC = () => {
 
       const ws = WebSocketSingleton.getInstance();
       WebSocketSingleton.setPlayers({
-        userId: user.id,
-        userName: user.userName,
-        avatarId: user.avatarId!,
+        userId: effectiveUser.id,
+        userName: effectiveUser.userName,
+        avatarId: effectiveUser.avatarId!,
       });
 
       ws.onopen = () => {
@@ -103,7 +130,7 @@ const Room: React.FC = () => {
         }
       };
     }
-  }, [data, user, roomCode]);
+  }, [data, effectiveUser, roomCode]);
 
   const initPhaser = useCallback(() => {
     if (gameRef.current) return;

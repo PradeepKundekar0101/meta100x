@@ -51,7 +51,8 @@ export default class TestScene extends Scene {
 
   private avatarId = "pajji";
   private roomId = "default";
-  private token = "token";
+  private token = "";
+  private guestName = "";
 
   constructor() {
     super("garden");
@@ -65,29 +66,28 @@ export default class TestScene extends Scene {
 
   preload() { }
 
+  private buildJoinPayload() {
+    const base: Record<string, string> = { roomId: this.roomId };
+    if (this.token) {
+      base.token = this.token;
+    } else {
+      base.guestName = this.guestName || "Guest";
+      base.avatarId = this.avatarId;
+    }
+    return base;
+  }
+
   private setupWebSocket() {
     this.socket = WebSocketSingleton.getInstance();
+    const joinMsg = JSON.stringify({
+      type: "JOIN_SPACE",
+      payload: this.buildJoinPayload(),
+    });
     if (this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(
-        JSON.stringify({
-          type: "JOIN_SPACE",
-          payload: {
-            roomId: this.roomId,
-            token: this.token,
-          },
-        })
-      );
+      this.socket.send(joinMsg);
     } else {
       this.socket.addEventListener("open", () => {
-        this.socket?.send(
-          JSON.stringify({
-            type: "JOIN_SPACE",
-            payload: {
-              roomId: this.roomId,
-              token: this.token,
-            },
-          })
-        );
+        this.socket?.send(joinMsg);
       });
     }
 
@@ -236,7 +236,8 @@ export default class TestScene extends Scene {
   create() {
     this.avatarId = localStorage.getItem("avatarId") || "pajji";
     this.roomId = localStorage.getItem("roomId") || "default";
-    this.token = localStorage.getItem("token") || "token";
+    this.token = localStorage.getItem("token") || "";
+    this.guestName = localStorage.getItem("guestName") || "";
 
     this.setupWebSocket();
 

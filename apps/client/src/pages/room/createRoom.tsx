@@ -66,7 +66,7 @@ const CreateRoom = () => {
       <div className="max-w-2xl mx-auto px-4 pt-20 pb-16">
         {/* Back link */}
         <button
-          onClick={() => navigate("/myrooms")}
+          onClick={() => navigate("/spaces")}
           className="inline-flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 transition-colors mb-10 group"
         >
           <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
@@ -116,11 +116,10 @@ const CreateRoom = () => {
                   key={map.mapId}
                   type="button"
                   onClick={() => setMapId(map.mapId)}
-                  className={`group relative rounded-xl overflow-hidden text-left transition-all duration-300 outline-none ring-1 ${
-                    mapId === map.mapId
+                  className={`group relative rounded-xl overflow-hidden text-left transition-all duration-300 outline-none ring-1 ${mapId === map.mapId
                       ? "ring-primaryBlue/60 shadow-lg shadow-primaryBlue/10"
                       : "ring-white/[0.07] hover:ring-white/[0.15]"
-                  }`}
+                    }`}
                 >
                   <div className="aspect-[16/9] relative">
                     <img
@@ -129,20 +128,18 @@ const CreateRoom = () => {
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div
-                      className={`absolute inset-0 transition-colors duration-300 ${
-                        mapId === map.mapId
+                      className={`absolute inset-0 transition-colors duration-300 ${mapId === map.mapId
                           ? "bg-primaryBlue/10"
                           : "bg-black/30 group-hover:bg-black/20"
-                      }`}
+                        }`}
                     />
 
                     {/* Selected check */}
                     <div
-                      className={`absolute top-3 right-3 transition-all duration-200 ${
-                        mapId === map.mapId
+                      className={`absolute top-3 right-3 transition-all duration-200 ${mapId === map.mapId
                           ? "opacity-100 scale-100"
                           : "opacity-0 scale-75"
-                      }`}
+                        }`}
                     >
                       <div className="bg-primaryBlue text-white p-1 rounded-full shadow-md">
                         <Check className="w-3 h-3" strokeWidth={3} />
