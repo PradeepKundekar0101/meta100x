@@ -6,12 +6,6 @@ import { LiveKitClient } from "@/lib/livekit";
 import { SpaceJoinedPayload, UserJoinedPayload, User, MovementPayload, UserLeftPayload } from "@/types";
 
 
-const avatarId = localStorage.getItem("avatarId") || "pajji";
-const roomId = localStorage.getItem("roomId") || "default";
-
-const token = localStorage.getItem("token") || "token";
-
-
 interface PathNode {
   x: number;
   y: number;
@@ -55,6 +49,10 @@ export default class TestScene extends Scene {
   private lastClickWorldPos: Phaser.Math.Vector2 | null = null;
   private hoverTimer: ReturnType<typeof setTimeout> | null = null;
 
+  private avatarId = "pajji";
+  private roomId = "default";
+  private token = "token";
+
   constructor() {
     super("garden");
     this.players = {};
@@ -74,8 +72,8 @@ export default class TestScene extends Scene {
         JSON.stringify({
           type: "JOIN_SPACE",
           payload: {
-            roomId,
-            token,
+            roomId: this.roomId,
+            token: this.token,
           },
         })
       );
@@ -85,8 +83,8 @@ export default class TestScene extends Scene {
           JSON.stringify({
             type: "JOIN_SPACE",
             payload: {
-              roomId,
-              token,
+              roomId: this.roomId,
+              token: this.token,
             },
           })
         );
@@ -236,6 +234,10 @@ export default class TestScene extends Scene {
   }
 
   create() {
+    this.avatarId = localStorage.getItem("avatarId") || "pajji";
+    this.roomId = localStorage.getItem("roomId") || "default";
+    this.token = localStorage.getItem("token") || "token";
+
     this.setupWebSocket();
 
     const map = this.make.tilemap({ key: "map" });
@@ -251,8 +253,8 @@ export default class TestScene extends Scene {
     this.player = this.physics.add.sprite(
       450,
       1000,
-      avatarId,
-      avatarId + "000"
+      this.avatarId,
+      this.avatarId + "000"
     );
 
     this.proximityCircle = this.add.graphics();

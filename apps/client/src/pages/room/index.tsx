@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "@/hooks/use-axios";
@@ -24,6 +24,7 @@ const Room: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [livekitToken, setLivekitToken] = useState<string>();
   const [zoom, setZoom] = useState(1);
+  const gameRef = useRef<Phaser.Game | null>(null);
 
   const handleZoom = (newZoom: number) => {
     setZoom(newZoom);
@@ -42,6 +43,9 @@ const Room: React.FC = () => {
   const initWebSocket = useCallback(() => {
     if (data?.data && user) {
       localStorage.setItem("roomId", roomCode!);
+      if (data.data.mapId) {
+        localStorage.setItem("mapId", data.data.mapId);
+      }
 
       const ws = WebSocketSingleton.getInstance();
       WebSocketSingleton.setPlayers({
@@ -68,9 +72,10 @@ const Room: React.FC = () => {
   }, [data, user, roomCode]);
 
   const initPhaser = useCallback(async () => {
+    if (gameRef.current) return;
     try {
       const Phaser = await import("phaser");
-      new Phaser.Game({
+      const game = new Phaser.Game({
         type: Phaser.AUTO,
         title: roomCode,
         scene: [Preloader, MainScene],
@@ -83,11 +88,11 @@ const Room: React.FC = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 0, x: 0 },
-            // debug: true,
           },
         },
         backgroundColor: "#000",
       });
+      gameRef.current = game;
     } catch (error) {
       console.error("Failed to initialize Phaser", error);
       toast.error("Game initialization failed");
@@ -99,6 +104,12 @@ const Room: React.FC = () => {
       initWebSocket();
       initPhaser();
     }
+    return () => {
+      if (gameRef.current) {
+        gameRef.current.destroy(true);
+        gameRef.current = null;
+      }
+    };
   }, [data, initWebSocket, initPhaser]);
 
   useEffect(() => {
