@@ -8,6 +8,7 @@ import { createServer } from "http";
 import { RabbitMQLib } from "@repo/rabbitmq/rabbit";
 import { RedisClient } from "./lib/Redis";
 import { handleMessages } from "./services/handleIncoming";
+import prismaClient from "@repo/db/client";
 
 const server = createServer();
 const wss = new WebSocketServer({ server });
@@ -32,10 +33,49 @@ wss.on("error", (err: any) => {
   }
 });
 
-server.on("request", (req, res) => {
+server.on("request", async (req, res) => {
   if (req.url === "/health") {
-    res.writeHead(200);
-    res.end("OK");
+    const checks: Record<string, { status: string; latency?: number }> = {};
+
+    const checkRedis = async () => {
+      const start = Date.now();
+      try {
+        const pong = await RedisClient.getPublisher().ping();
+        checks.redis = { status: pong === "PONG" ? "ok" : "error", latency: Date.now() - start };
+      } catch {
+        checks.redis = { status: "error", latency: Date.now() - start };
+      }
+    };
+
+    const checkRabbitMQ = () => {
+      checks.rabbitmq = {
+        status: RabbitMQLib.channel ? "ok" : "error",
+      };
+    };
+
+    const checkDB = async () => {
+      const start = Date.now();
+      try {
+        await prismaClient.$queryRaw`SELECT 1`;
+        checks.db = { status: "ok", latency: Date.now() - start };
+      } catch {
+        checks.db = { status: "error", latency: Date.now() - start };
+      }
+    };
+
+    await Promise.all([checkRedis(), checkDB()]);
+    checkRabbitMQ();
+
+    const allHealthy = Object.values(checks).every((c) => c.status === "ok");
+    const body = JSON.stringify({
+      status: allHealthy ? "healthy" : "degraded",
+      uptime: process.uptime(),
+      connections: wss.clients.size,
+      checks,
+    });
+
+    res.writeHead(allHealthy ? 200 : 503, { "Content-Type": "application/json" });
+    res.end(body);
   } else {
     res.writeHead(404);
     res.end();
