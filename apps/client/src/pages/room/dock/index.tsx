@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { ExitRoomDialog } from "./exitRoomDialog";
-import { RoomParticipantsDialog } from "./roomParticipantsDialog";
-import { RoomDetailsDialog } from "./roomDetailsDialog";
 import { TrackToggleComponent } from "./trackToggle";
+
 const Dock = () => {
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
 
   return (
-    <div className="absolute bottom-2 z-50 media left-1/2 transform -translate-x-1/2 bg-[#0008] backdrop-blur-2xl p-2 px-10 flex justify-center rounded-full space-x-4">
+    <div className="absolute bottom-3 z-50 media left-1/2 transform -translate-x-1/2 bg-[#0c0c14]/80 backdrop-blur-xl p-2 px-6 flex justify-center items-center rounded-2xl ring-1 ring-white/[0.08] gap-3">
       <TrackToggleComponent />
-      <RoomParticipantsDialog />
-      <RoomDetailsDialog />
+      <div className="w-px h-6 bg-white/[0.08]" />
       <ExitRoomDialog
         isExitDialogOpen={isExitDialogOpen}
         setIsExitDialogOpen={setIsExitDialogOpen}

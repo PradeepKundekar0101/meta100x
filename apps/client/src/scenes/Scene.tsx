@@ -273,6 +273,15 @@ export default class TestScene extends Scene {
     const mapHeight = map.heightInPixels;
     this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
 
+    const cam = this.cameras.main;
+    const minZoomX = cam.width / mapWidth;
+    const minZoomY = cam.height / mapHeight;
+    const fitZoom = Math.max(minZoomX, minZoomY, 1);
+    cam.setZoom(fitZoom);
+    window.dispatchEvent(
+      new CustomEvent("ph-zoom-sync", { detail: { zoom: fitZoom } })
+    );
+
     // "Move here" hover indicator for walkable ground
     this.moveHereText = this.add
       .text(0, 0, "Move here", {
