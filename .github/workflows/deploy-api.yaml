@@ -66,7 +66,7 @@ jobs:
 
           # Construct the network configuration
           # Note: If your task definition uses 'awsvpc' network mode (Fargate), this is required.
-          NETWORK_CONFIG="awsvpcConfiguration={subnets=[$SUBNET_1,$SUBNET_2],securityGroups=[$SECURITY_GROUP],assignPublicIp=DISABLED}"
+          NETWORK_CONFIG="awsvpcConfiguration={subnets=[$SUBNET_1,$SUBNET_2],securityGroups=[$SECURITY_GROUP],assignPublicIp=ENABLED}"
 
           # Override the command to run migrations
           # We use the same image we just built
