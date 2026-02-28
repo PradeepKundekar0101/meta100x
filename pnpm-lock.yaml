@@ -263,6 +263,9 @@ importers:
 
   apps/ws-server:
     dependencies:
+      '@prisma/client':
+        specifier: ^6.0.1
+        version: 6.0.1(prisma@6.0.1)
       '@repo/db':
         specifier: workspace:*
         version: link:../../packages/db
