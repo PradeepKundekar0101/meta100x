@@ -5,7 +5,7 @@ import {
   useLocalParticipant,
 } from "@livekit/components-react";
 import { Track, Participant } from "livekit-client";
-import { Mic, MicOff, VideoOff, User } from "lucide-react";
+import { MicOff, VideoOff, User } from "lucide-react";
 
 function getGridLayout(count: number) {
   if (count <= 1) return { cols: 1, rows: 1 };
