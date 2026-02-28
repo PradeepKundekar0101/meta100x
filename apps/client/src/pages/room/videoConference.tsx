@@ -6,7 +6,14 @@ import {
   TrackReference,
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
-import { Move, Maximize2 } from "lucide-react";
+import { Move, Maximize2, MonitorUp } from "lucide-react";
+
+function getDefaultTileSize(track: { source: Track.Source }) {
+  if (track.source === Track.Source.ScreenShare) {
+    return { width: 480, height: 320 };
+  }
+  return { width: 200, height: 150 };
+}
 
 const MyVideoConference = () => {
   const sources = useMemo(
@@ -24,13 +31,15 @@ const MyVideoConference = () => {
     const savedStates = localStorage.getItem("videoStates");
     return savedStates
       ? JSON.parse(savedStates)
-      : tracks.map((track, index) => ({
-        id: track.participant.sid,
-        x: 20 * index,
-        y: 20 * index,
-        width: 200,
-        height: 150,
-      }));
+      : tracks.map((track, index) => {
+        const size = getDefaultTileSize(track);
+        return {
+          id: track.participant.sid,
+          x: 20 * index,
+          y: 20 * index,
+          ...size,
+        };
+      });
   });
 
   useEffect(() => {
@@ -50,13 +59,13 @@ const MyVideoConference = () => {
 
         const newStates = tracks.map((track) => {
           const existingState = existingStatesMap.get(track.participant.sid);
+          const size = getDefaultTileSize(track);
           return (
             existingState || {
               id: track.participant.sid,
               x: 20 * tracks.indexOf(track),
               y: 20 * tracks.indexOf(track),
-              width: 200,
-              height: 150,
+              ...size,
             }
           );
         });
@@ -171,9 +180,10 @@ const DraggableResizableVideo = ({
     accept: "video",
   });
 
+  const isScreenShare = track.source === Track.Source.ScreenShare;
+
   drag(drop(ref));
   resize(resizeRef);
-  console.log(track.participant);
   return (
     <div
       ref={ref}
@@ -185,9 +195,11 @@ const DraggableResizableVideo = ({
         opacity: isDragging ? 0.5 : 1,
         transition: "opacity 0.2s ease",
       }}
-      className={`bg-gray-800 rounded-lg overflow-hidden relative group pointer-events-auto ${track.participant.isSpeaking
-        ? "border-green-300 shadow-green-600 shadow-xl border-2"
-        : "border-none"
+      className={`bg-gray-800 rounded-lg overflow-hidden relative group pointer-events-auto ${isScreenShare
+          ? "ring-2 ring-[#6658fe]/40"
+          : track.participant.isSpeaking
+            ? "border-green-300 shadow-green-600 shadow-xl border-2"
+            : "border-none"
         }`}
     >
       {/* Drag Handle */}
@@ -198,6 +210,14 @@ const DraggableResizableVideo = ({
         <Move size={16} className="text-white" />
       </div>
 
+      {/* Screen share badge */}
+      {isScreenShare && (
+        <div className="absolute top-1 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-[#6658fe]/80 backdrop-blur-sm px-2 py-0.5 rounded-md">
+          <MonitorUp size={11} className="text-white" />
+          <span className="text-white text-[10px] font-semibold">Screen</span>
+        </div>
+      )}
+
       {/* Identity Label */}
       <h1 className="absolute bg-white text-black bottom-3 left-2 z-10">
         {track.participant.name}{" "}
@@ -205,7 +225,10 @@ const DraggableResizableVideo = ({
       </h1>
 
       {/* Video Track */}
-      <VideoTrack trackRef={track} className="w-full h-full object-cover" />
+      <VideoTrack
+        trackRef={track}
+        className={`w-full h-full ${isScreenShare ? "object-contain bg-black" : "object-cover"}`}
+      />
 
       {/* Resize Handle */}
       <div

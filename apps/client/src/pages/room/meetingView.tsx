@@ -5,7 +5,7 @@ import {
   useLocalParticipant,
 } from "@livekit/components-react";
 import { Track, Participant } from "livekit-client";
-import { MicOff, VideoOff, User } from "lucide-react";
+import { MicOff, VideoOff, User, MonitorUp } from "lucide-react";
 
 function getGridLayout(count: number) {
   if (count <= 1) return { cols: 1, rows: 1 };
@@ -33,10 +33,11 @@ const MeetingView = () => {
   const { localParticipant } = useLocalParticipant();
 
   const participantTracks = useMemo(() => {
-    const seen = new Set<string>();
+    const seenCamera = new Set<string>();
     return tracks.filter((t) => {
-      if (seen.has(t.participant.identity)) return false;
-      seen.add(t.participant.identity);
+      if (t.source === Track.Source.ScreenShare) return true;
+      if (seenCamera.has(t.participant.identity)) return false;
+      seenCamera.add(t.participant.identity);
       return true;
     });
   }, [tracks]);
@@ -68,25 +69,39 @@ const MeetingView = () => {
         {participantTracks.map((trackRef) => {
           const isLocal =
             trackRef.participant.identity === localParticipant.identity;
+          const isScreenShare =
+            trackRef.source === Track.Source.ScreenShare;
           const hasVideo =
             trackRef.publication &&
             !trackRef.publication.isMuted &&
             trackRef.publication.track;
           const isSpeaking = trackRef.participant.isSpeaking;
           const isMicEnabled = isParticipantMicEnabled(trackRef.participant);
+          const tileKey = isScreenShare
+            ? `${trackRef.participant.identity}-screen`
+            : trackRef.participant.identity;
 
           return (
             <div
-              key={trackRef.participant.identity}
+              key={tileKey}
               className={`
                 relative rounded-xl overflow-hidden bg-[#1a1a2e] transition-all duration-300
-                ${isSpeaking ? "ring-2 ring-[#6658fe] shadow-[0_0_20px_rgba(102,88,254,0.15)]" : "ring-1 ring-white/[0.06]"}
+                ${isScreenShare ? "ring-2 ring-[#6658fe]/40 col-span-2 row-span-2" : ""}
+                ${!isScreenShare && isSpeaking ? "ring-2 ring-[#6658fe] shadow-[0_0_20px_rgba(102,88,254,0.15)]" : !isScreenShare ? "ring-1 ring-white/[0.06]" : ""}
               `}
             >
+              {/* Screen share badge */}
+              {isScreenShare && (
+                <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5 bg-[#6658fe]/80 backdrop-blur-sm px-2.5 py-1 rounded-lg">
+                  <MonitorUp size={13} className="text-white" />
+                  <span className="text-white text-[11px] font-semibold">Screen</span>
+                </div>
+              )}
+
               {hasVideo ? (
                 <VideoTrack
                   trackRef={trackRef}
-                  className="w-full h-full object-cover"
+                  className={`w-full h-full ${isScreenShare ? "object-contain bg-black" : "object-cover"}`}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1a1a2e] to-[#12121f]">
@@ -110,7 +125,12 @@ const MeetingView = () => {
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-white/90 text-[13px] font-medium truncate">
                       {trackRef.participant.identity}
-                      {isLocal && (
+                      {isScreenShare && (
+                        <span className="text-[#a49bff] ml-1.5 text-[11px] font-normal">
+                          Screen
+                        </span>
+                      )}
+                      {isLocal && !isScreenShare && (
                         <span className="text-[#a49bff] ml-1.5 text-[11px] font-normal">
                           (You)
                         </span>
@@ -118,17 +138,17 @@ const MeetingView = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    {!isMicEnabled && (
+                    {!isMicEnabled && !isScreenShare && (
                       <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center">
                         <MicOff size={12} className="text-red-400" />
                       </div>
                     )}
-                    {!hasVideo && (
+                    {!hasVideo && !isScreenShare && (
                       <div className="w-6 h-6 rounded-full bg-white/[0.08] flex items-center justify-center">
                         <VideoOff size={12} className="text-white/40" />
                       </div>
                     )}
-                    {isSpeaking && isMicEnabled && (
+                    {isSpeaking && isMicEnabled && !isScreenShare && (
                       <div className="flex items-center gap-[2px] h-6 px-1.5">
                         {[1, 2, 3].map((i) => (
                           <div
@@ -148,7 +168,7 @@ const MeetingView = () => {
               </div>
 
               {/* Speaking pulse ring */}
-              {isSpeaking && (
+              {isSpeaking && !isScreenShare && (
                 <div className="absolute inset-0 rounded-xl ring-2 ring-[#6658fe]/50 animate-pulse pointer-events-none" />
               )}
             </div>

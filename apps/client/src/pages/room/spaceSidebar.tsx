@@ -79,49 +79,77 @@ const SidebarHeader: React.FC<{
   onTabChange: (tab: TabId) => void;
   onClose: () => void;
   roomCode: string;
-}> = ({ activeTab, onTabChange, onClose, roomCode }) => (
-  <div className="shrink-0">
-    <div className="flex items-center justify-between px-4 pt-4 pb-2">
-      <span className="text-white/50 text-[11px] font-medium tracking-widest uppercase">
-        Space Panel
-      </span>
-      <button
-        onClick={onClose}
-        className="p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-colors"
-      >
-        <X size={16} />
-      </button>
-    </div>
-    <div>
-      <h1>Here is the Join url</h1>
-      <div className="flex items-center gap-2">
-        <span className="text-white/70 text-[13px] font-medium tracking-widest uppercase">{`https://usemetaworld.com/space/join?code=${roomCode}`}</span>
-        <button className="p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-colors">
-          <Copy size={16} />
+}> = ({ activeTab, onTabChange, onClose, roomCode }) => {
+  const [copied, setCopied] = useState(false);
+  const joinUrl = `https://usemetaworld.com/space/join?code=${roomCode}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(joinUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="shrink-0">
+      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <span className="text-white/50 text-[11px] font-medium tracking-widest uppercase">
+          Space Panel
+        </span>
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-colors"
+        >
+          <X size={16} />
         </button>
       </div>
-    </div>
-    <div className="flex gap-1 px-3 pb-3 pt-3">
-      {TAB_CONFIG.map(({ id, label, icon: Icon }) => {
-        const isActive = activeTab === id;
-        return (
+
+      <div className="px-4 py-2">
+        <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.04] ring-1 ring-white/[0.08] hover:ring-white/[0.12] transition-all group">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-medium text-white/30 uppercase tracking-wider mb-0.5">
+              Invite Link
+            </p>
+            <p className="text-[13px] text-white/70 font-mono truncate">
+              {joinUrl}
+            </p>
+          </div>
           <button
-            key={id}
-            onClick={() => onTabChange(id)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${isActive
-              ? "bg-[#6658fe]/15 text-[#a49bff] shadow-[inset_0_0_0_1px_rgba(102,88,254,0.2)]"
-              : "text-white/40 hover:text-white/60 hover:bg-white/[0.04]"
-              }`}
+            onClick={handleCopy}
+            className="p-2 rounded-lg text-white/30 hover:text-white/90 hover:bg-white/[0.08] transition-all shrink-0"
+            title="Copy link"
           >
-            <Icon size={14} />
-            {label}
+            {copied ? (
+              <Check size={16} className="text-emerald-400" />
+            ) : (
+              <Copy size={16} />
+            )}
           </button>
-        );
-      })}
+        </div>
+      </div>
+
+      <div className="flex gap-1 px-3 pb-3 pt-2">
+        {TAB_CONFIG.map(({ id, label, icon: Icon }) => {
+          const isActive = activeTab === id;
+          return (
+            <button
+              key={id}
+              onClick={() => onTabChange(id)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${
+                isActive
+                  ? "bg-[#6658fe]/15 text-[#a49bff] shadow-[inset_0_0_0_1px_rgba(102,88,254,0.2)]"
+                  : "text-white/40 hover:text-white/60 hover:bg-white/[0.04]"
+              }`}
+            >
+              <Icon size={14} />
+              {label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
     </div>
-    <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
-  </div>
-);
+  );
+};
 
 const ChatPanel: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { user, token } = useAppSelector((state) => state.auth);
