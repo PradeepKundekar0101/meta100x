@@ -1,17 +1,16 @@
 import amqp from "amqplib";
 
-const RABBITMQ_URL =
-  process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
-
 export class RabbitMQLib {
   static channel: amqp.Channel | null = null;
   static connection: amqp.Connection | null = null;
 
   static async connectQueue(retryCount = 5, retryDelay = 5000): Promise<void> {
+    const url =
+      process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
     while (retryCount > 0) {
       try {
         console.log("Attempting to connect to RabbitMQ...");
-        this.connection = await amqp.connect(RABBITMQ_URL);
+        this.connection = await amqp.connect(url);
         this.channel = await this.connection.createChannel();
         await this.channel.assertQueue("messages", { durable: true });
         console.log("Connected to RabbitMQ successfully.");
