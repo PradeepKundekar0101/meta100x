@@ -70,7 +70,7 @@ jobs:
 
           # Override the command to run migrations
           # We use the same image we just built
-          OVERRIDES='{"containerOverrides": [{"name": "'$CONTAINER_NAME'", "command": ["npx", "prisma", "migrate", "deploy"]}]}'
+          OVERRIDES='{"containerOverrides": [{"name": "'$CONTAINER_NAME'", "command": ["sh", "-c", "cd /app/packages/db && npx prisma migrate deploy"]}]}'
 
           TASK_ARN=$(aws ecs run-task \
             --cluster ${{ env.ECS_CLUSTER }} \
