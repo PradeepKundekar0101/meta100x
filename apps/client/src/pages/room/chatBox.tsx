@@ -66,7 +66,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen, roomId }) => {
       );
       setMessages(msg);
     }
-  }, [data]);
+  }, [data, user?.id]);
   const handleSendMessage = () => {
     if (inputMessage.trim()) {
       if (WebSocketSingleton.getInstance().readyState === WebSocket.OPEN) {
@@ -137,8 +137,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen, roomId }) => {
             </Avatar>
             <div
               className={`p-2 rounded-lg max-w-[70%] ${message.isCurrentUser
-                  ? "bg-blue-600 text-white self-end"
-                  : "bg-gray-200 text-black self-start"
+                ? "bg-blue-600 text-white self-end"
+                : "bg-gray-200 text-black self-start"
                 }`}
             >
               <p className="text-sm font-semibold mb-1">{message.userName}</p>

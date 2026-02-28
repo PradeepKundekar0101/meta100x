@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import {
   Check,
   Loader2,
-  Sparkles,
   Gamepad2,
   ArrowRight,
   LayoutGrid
