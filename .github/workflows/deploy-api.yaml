@@ -1,0 +1,120 @@
+name: Deploy API server to ECS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api-server/**"
+      - "packages/db/**"
+      - "packages/types/**"
+      - ".github/workflows/deploy-api.yaml"
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: metaplot/api-server
+  ECS_CLUSTER: metaplot-api-server
+  ECS_SERVICE: metaverse-service
+  ECS_TASK_DEFINITION: api-server
+  CONTAINER_NAME: metaverse-api-server
+
+jobs:
+  build-migrate-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Creds
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push API image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            -f apps/api-server/Dockerfile \
+            .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Run Database Migration
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          # Ensure these secrets are set in your repository for the correct region/VPC
+          SUBNET_1: ${{ secrets.PRIVATE_SUBNET_1 }}
+          SUBNET_2: ${{ secrets.PRIVATE_SUBNET_2 }}
+          SUBNET_3: ${{ secrets.PRIVATE_SUBNET_3 }}
+          SECURITY_GROUP: ${{ secrets.ECS_SECURITY_GROUP }}
+        run: |
+          echo "Running migrations..."
+
+          # Construct the network configuration
+          # Note: If your task definition uses 'awsvpc' network mode (Fargate), this is required.
+          NETWORK_CONFIG="awsvpcConfiguration={subnets=[$SUBNET_1,$SUBNET_2],securityGroups=[$SECURITY_GROUP],assignPublicIp=DISABLED}"
+
+          # Override the command to run migrations
+          # We use the same image we just built
+          OVERRIDES='{"containerOverrides": [{"name": "'$CONTAINER_NAME'", "command": ["npx", "prisma", "migrate", "deploy"]}]}'
+
+          TASK_ARN=$(aws ecs run-task \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+            --launch-type FARGATE \
+            --network-configuration "$NETWORK_CONFIG" \
+            --overrides "$OVERRIDES" \
+            --query 'tasks[0].taskArn' \
+            --output text)
+
+          echo "Migration task started: $TASK_ARN"
+
+          echo "Waiting for migration to complete..."
+          aws ecs wait tasks-stopped --cluster ${{ env.ECS_CLUSTER }} --tasks $TASK_ARN
+
+          EXIT_CODE=$(aws ecs describe-tasks \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --tasks $TASK_ARN \
+            --query 'tasks[0].containers[0].exitCode' \
+            --output text)
+
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "Migration failed with exit code $EXIT_CODE"
+            exit 1
+          else
+            echo "Migration completed successfully!"
+          fi
+
+      - name: Update ECS api-service
+        run: |
+          echo "Deploying new API version..."
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --force-new-deployment \
+            --no-cli-pager
+
+          echo "Deployment initiated"
+
+      - name: Wait for deployment to complete
+        run: |
+          echo "Waiting for service to stabilize..."
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ env.ECS_SERVICE }}
+
+          echo "Deployment completed successfully!"

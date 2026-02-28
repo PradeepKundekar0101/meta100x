@@ -76,7 +76,7 @@
 }
 
 .hero{
-  background-image: linear-gradient(to bottom, #ffffff 0%, #ffffff 45%, rgba(255,255,255,0) 100%), url("assets/hero.png");
+  background-image: linear-gradient(to bottom, #ffffff 0%, #ffffff 45%, rgba(255,255,255,0) 100%), url("hero.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

@@ -120,8 +120,8 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </nav>
 
-      <main className="pt-20 pb-10 min-h-screen">
-        <div className="container mx-auto max-w-7xl">{children}</div>
+      <main className="pt-10 min-h-screen">
+        <div className="mx-auto ">{children}</div>
       </main>
     </div>
   );

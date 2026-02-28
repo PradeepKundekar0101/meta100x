@@ -456,11 +456,20 @@ const MyRooms = () => {
         </div>
         <div>
           <Button
+            variant={"outline"}
             onClick={() => {
               navigate("/space/join");
             }}
+            className="mx-2"
           >
             Join by room ID
+          </Button>
+          <Button
+            onClick={() => {
+              navigate("/createroom");
+            }}
+          >
+            Create a space
           </Button>
         </div>
       </div>

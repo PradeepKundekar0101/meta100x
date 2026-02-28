@@ -24,7 +24,6 @@ interface Message {
 const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen, roomId }) => {
   const { user, token } = useAppSelector((state) => state.auth);
 
-  // const socket = WebSocketSingleton.getInstance()
   const api = useAxios();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -120,17 +119,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen, roomId }) => {
   }, [user]);
   return (
     <div
-      className={`fixed chat top-0 h-screen w-80 bg-black bg-opacity-20 transition-transform duration-300 ${
-        isChatOpen ? "translate-x-0" : "translate-x-full"
-      } right-0 z-100`}
+      className={`fixed chat top-0 h-screen w-80 bg-black bg-opacity-20 transition-transform duration-300 ${isChatOpen ? "translate-x-0" : "translate-x-full"
+        } right-0 z-100`}
     >
       <div className="flex-grow overflow-y-auto p-4 space-y-4 h-[calc(100%-100px)]">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex items-start space-x-2 ${
-              message.isCurrentUser ? "flex-row-reverse space-x-reverse" : ""
-            }`}
+            className={`flex items-start space-x-2 ${message.isCurrentUser ? "flex-row-reverse space-x-reverse" : ""
+              }`}
           >
             <Avatar className="w-8 h-8 bg-blue-600">
               <AvatarImage
@@ -139,11 +136,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isChatOpen, roomId }) => {
               />
             </Avatar>
             <div
-              className={`p-2 rounded-lg max-w-[70%] ${
-                message.isCurrentUser
+              className={`p-2 rounded-lg max-w-[70%] ${message.isCurrentUser
                   ? "bg-blue-600 text-white self-end"
                   : "bg-gray-200 text-black self-start"
-              }`}
+                }`}
             >
               <p className="text-sm font-semibold mb-1">{message.userName}</p>
               <p>{message.content}</p>

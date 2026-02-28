@@ -3,45 +3,22 @@ import { createAnimations } from "./utils";
 import { WebSocketMessage, WebSocketSingleton } from "@/utils/websocket";
 import { toast } from "sonner";
 import { LiveKitClient } from "@/lib/livekit";
+import { SpaceJoinedPayload, UserJoinedPayload, User, MovementPayload, UserLeftPayload } from "@/types";
+
 
 const avatarId = localStorage.getItem("avatarId") || "pajji";
 const roomId = localStorage.getItem("roomId") || "default";
 
 const token = localStorage.getItem("token") || "token";
 
-interface User {
-  id: string;
+
+interface PathNode {
   x: number;
   y: number;
-  userName: string;
-  avatarId: string;
-}
-
-interface SpaceJoinedPayload {
-  userId: string;
-  liveKitAccessToken: string;
-  users: User[];
-}
-
-interface UserJoinedPayload {
-  id: string;
-  x: number;
-  y: number;
-  userName: string;
-  avatarId: string;
-}
-
-interface MovementPayload {
-  userId: string;
-  x: number;
-  y: number;
-  xPos: number;
-  yPos: number;
-}
-
-interface UserLeftPayload {
-  id: string;
-  userName: string;
+  g: number;
+  h: number;
+  f: number;
+  parent: PathNode | null;
 }
 
 export default class TestScene extends Scene {
@@ -71,6 +48,13 @@ export default class TestScene extends Scene {
   private dragStartPoint: Phaser.Math.Vector2 | null = null;
   private dragStartCam: Phaser.Math.Vector2 | null = null;
 
+  private movePath: Phaser.Math.Vector2[] = [];
+  private moveHereText!: Phaser.GameObjects.Text;
+  private moveMarker!: Phaser.GameObjects.Graphics;
+  private lastClickTime: number = 0;
+  private lastClickWorldPos: Phaser.Math.Vector2 | null = null;
+  private hoverTimer: ReturnType<typeof setTimeout> | null = null;
+
   constructor() {
     super("garden");
     this.players = {};
@@ -81,7 +65,7 @@ export default class TestScene extends Scene {
     this.currentPlayerLastAnimation = "";
   }
 
-  preload() {}
+  preload() { }
 
   private setupWebSocket() {
     this.socket = WebSocketSingleton.getInstance();
@@ -173,18 +157,15 @@ export default class TestScene extends Scene {
 
           if (animationKey) {
             player.anims.play(animationKey, true);
-            // Store the last animation for this player
             this.playerLastAnimations[userId] = animationKey;
           }
 
           const existingTween = this.playerTweens[userId];
 
           if (existingTween && existingTween.isPlaying()) {
-            // update the existing tween's target instead of creating a new one
             existingTween.updateTo("x", targetX + 16, true);
             existingTween.updateTo("y", targetY + 32, true);
           } else {
-            // create a new tween only if none exists or the previous one completed
             const dis = Phaser.Math.Distance.Between(
               player.body.x + 16,
               player.body.y + 32,
@@ -200,14 +181,11 @@ export default class TestScene extends Scene {
               duration,
               ease: "Linear",
               onComplete: () => {
-                // stop the animation and show the first frame (idle pose) of the last direction
                 const lastAnimation = this.playerLastAnimations[userId];
                 player.anims.stop();
 
                 if (lastAnimation) {
-                  // extract direction from animation key (e.g., "pajji-left" -> "left")
                   const direction = lastAnimation.split("-")[1];
-                  // set to the idle frame (first frame) of that direction
                   const idleFrame = `${direction}000`;
                   player.setFrame(idleFrame);
                 }
@@ -293,6 +271,24 @@ export default class TestScene extends Scene {
     const mapHeight = map.heightInPixels;
     this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
 
+    // "Move here" hover indicator for walkable ground
+    this.moveHereText = this.add
+      .text(0, 0, "Move here", {
+        fontSize: "10px",
+        color: "#ffffff",
+        backgroundColor: "#000000aa",
+        padding: { x: 6, y: 3 },
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5, 1.5)
+      .setVisible(false)
+      .setDepth(1000);
+
+    // Target marker shown on double-click destination
+    this.moveMarker = this.add.graphics();
+    this.moveMarker.setVisible(false);
+    this.moveMarker.setDepth(999);
+
     const zoomHandler = (e: Event) => {
       const zoom = (e as CustomEvent).detail.zoom;
       this.cameras.main.setZoom(zoom);
@@ -318,6 +314,12 @@ export default class TestScene extends Scene {
           this.cameras.main.scrollY
         );
         this.input.setDefaultCursor("grabbing");
+        // Cancel any pending hover label
+        this.moveHereText.setVisible(false);
+        if (this.hoverTimer) {
+          clearTimeout(this.hoverTimer);
+          this.hoverTimer = null;
+        }
       }
     });
 
@@ -329,13 +331,85 @@ export default class TestScene extends Scene {
 
         this.cameras.main.scrollX = this.dragStartCam.x - diffX;
         this.cameras.main.scrollY = this.dragStartCam.y - diffY;
+        this.moveHereText.setVisible(false);
+        if (this.hoverTimer) {
+          clearTimeout(this.hoverTimer);
+          this.hoverTimer = null;
+        }
+      } else {
+        const worldPoint = this.cameras.main.getWorldPoint(
+          pointer.x,
+          pointer.y
+        );
+        if (this.isWalkable(worldPoint.x, worldPoint.y)) {
+          // Hide immediately on move; start a fresh 1.5s timer
+          this.moveHereText.setVisible(false);
+          if (this.hoverTimer) clearTimeout(this.hoverTimer);
+          this.hoverTimer = setTimeout(() => {
+            this.moveHereText
+              .setPosition(worldPoint.x, worldPoint.y - 10)
+              .setVisible(true);
+            this.hoverTimer = null;
+          }, 1000);
+          this.input.setDefaultCursor("pointer");
+        } else {
+          this.moveHereText.setVisible(false);
+          if (this.hoverTimer) {
+            clearTimeout(this.hoverTimer);
+            this.hoverTimer = null;
+          }
+          this.input.setDefaultCursor("default");
+        }
       }
     });
 
-    this.input.on("pointerup", () => {
+    this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
+      const dragDistance = this.dragStartPoint
+        ? Phaser.Math.Distance.Between(
+          pointer.x,
+          pointer.y,
+          this.dragStartPoint.x,
+          this.dragStartPoint.y
+        )
+        : 0;
+      const wasDrag = this.isDragging && dragDistance > 10;
+
       if (this.isDragging) {
         this.isDragging = false;
         this.input.setDefaultCursor("default");
+      }
+
+      // Double-click detection for click-to-move
+      if (!wasDrag) {
+        const now = Date.now();
+        const worldPoint = this.cameras.main.getWorldPoint(
+          pointer.x,
+          pointer.y
+        );
+
+        if (
+          now - this.lastClickTime < 400 &&
+          this.lastClickWorldPos &&
+          Phaser.Math.Distance.Between(
+            worldPoint.x,
+            worldPoint.y,
+            this.lastClickWorldPos.x,
+            this.lastClickWorldPos.y
+          ) < 50
+        ) {
+          // Double-click detected — move player to target
+          if (this.isWalkable(worldPoint.x, worldPoint.y)) {
+            this.movePlayerToTarget(worldPoint.x, worldPoint.y);
+          }
+          this.lastClickTime = 0;
+          this.lastClickWorldPos = null;
+        } else {
+          this.lastClickTime = now;
+          this.lastClickWorldPos = new Phaser.Math.Vector2(
+            worldPoint.x,
+            worldPoint.y
+          );
+        }
       }
     });
 
@@ -357,7 +431,6 @@ export default class TestScene extends Scene {
         cursors!.down.isDown) &&
       !this.isDragging
     ) {
-      // If the camera isn't currently following the player, start following
       if (!this.cameras.main.deadzone) {
         this.cameras.main.startFollow(this.player, true);
       }
@@ -392,6 +465,49 @@ export default class TestScene extends Scene {
       animationKey = `${texturekey}-front`;
       this.currentPlayerLastAnimation = animationKey;
       moving = true;
+    }
+
+    // Click-to-move: if no keyboard input, follow the computed path
+    if (!moving && this.movePath.length > 0) {
+      const nextWaypoint = this.movePath[0];
+      const dx = nextWaypoint.x - this.player.x;
+      const dy = nextWaypoint.y - this.player.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist > 5) {
+        const texturekey = this.player.texture.key;
+        const angle = Math.atan2(dy, dx);
+        velocityX = Math.cos(angle) * 100;
+        velocityY = Math.sin(angle) * 100;
+
+        // Pick walk animation based on dominant direction
+        if (Math.abs(dx) > Math.abs(dy)) {
+          animationKey =
+            dx < 0 ? `${texturekey}-left` : `${texturekey}-right`;
+        } else {
+          animationKey =
+            dy < 0 ? `${texturekey}-back` : `${texturekey}-front`;
+        }
+        this.currentPlayerLastAnimation = animationKey;
+        moving = true;
+
+        if (!this.cameras.main.deadzone) {
+          this.cameras.main.startFollow(this.player, true);
+        }
+      } else {
+        // Reached this waypoint, advance to the next one
+        this.movePath.shift();
+        if (this.movePath.length === 0) {
+          // Reached final destination
+          this.tweens.killTweensOf(this.moveMarker);
+          this.moveMarker.setVisible(false);
+        }
+      }
+    } else if (moving && this.movePath.length > 0) {
+      // Keyboard movement overrides click-to-move
+      this.movePath = [];
+      this.tweens.killTweensOf(this.moveMarker);
+      this.moveMarker.setVisible(false);
     }
 
     this.player.body.setVelocity(velocityX, velocityY);
@@ -441,7 +557,6 @@ export default class TestScene extends Scene {
     }
   }
 
-  // Cleanup method to unsubscribe from WebSocket events
   shutdown() {
     if (this.spaceJoinedUnsubscribe) {
       this.spaceJoinedUnsubscribe();
@@ -454,6 +569,16 @@ export default class TestScene extends Scene {
     }
     if (this.userLeftUnsubscribe) {
       this.userLeftUnsubscribe();
+    }
+
+    // Clean up click-to-move state
+    this.movePath = [];
+    if (this.moveMarker) {
+      this.tweens.killTweensOf(this.moveMarker);
+    }
+    if (this.hoverTimer) {
+      clearTimeout(this.hoverTimer);
+      this.hoverTimer = null;
     }
   }
 
@@ -476,6 +601,203 @@ export default class TestScene extends Scene {
       })
       .setOrigin(0.5);
     this.labels[playerId] = label;
+  }
+
+  private isWalkable(worldX: number, worldY: number): boolean {
+    if (!this.worldLayer) return false;
+    const map = this.worldLayer.tilemap;
+    if (
+      worldX < 0 ||
+      worldY < 0 ||
+      worldX >= map.widthInPixels ||
+      worldY >= map.heightInPixels
+    ) {
+      return false;
+    }
+    const tile = this.worldLayer.getTileAtWorldXY(worldX, worldY);
+    if (tile && tile.properties && tile.properties.collides) {
+      return false;
+    }
+    return true;
+  }
+
+  private movePlayerToTarget(x: number, y: number) {
+    const path = this.findPath(this.player.x, this.player.y, x, y);
+    if (path.length === 0) return; // No valid path found
+
+    this.movePath = path;
+
+    // Draw pulsing target marker rings at destination
+    this.tweens.killTweensOf(this.moveMarker);
+    this.moveMarker.clear();
+    this.moveMarker.lineStyle(2, 0x4ade80, 0.8);
+    this.moveMarker.strokeCircle(0, 0, 10);
+    this.moveMarker.lineStyle(1, 0x4ade80, 0.4);
+    this.moveMarker.strokeCircle(0, 0, 16);
+    this.moveMarker.setPosition(x, y);
+    this.moveMarker.setAlpha(1);
+    this.moveMarker.setVisible(true);
+
+    // Pulse animation on the marker
+    this.tweens.add({
+      targets: this.moveMarker,
+      alpha: { from: 1, to: 0.3 },
+      duration: 600,
+      yoyo: true,
+      repeat: -1,
+    });
+
+    // Re-follow the player with camera
+    this.cameras.main.startFollow(this.player, true);
+  }
+
+  /**
+   * A* pathfinding on the tilemap grid.
+   * Returns an array of world-coordinate waypoints from start to end,
+   * navigating around any tile with { collides: true }.
+   */
+  private findPath(
+    startWorldX: number,
+    startWorldY: number,
+    endWorldX: number,
+    endWorldY: number
+  ): Phaser.Math.Vector2[] {
+    if (!this.worldLayer) return [];
+
+    const layer = this.worldLayer;
+    const startTileX = layer.worldToTileX(startWorldX)!;
+    const startTileY = layer.worldToTileY(startWorldY)!;
+    const endTileX = layer.worldToTileX(endWorldX)!;
+    const endTileY = layer.worldToTileY(endWorldY)!;
+
+    // Already on the target tile
+    if (startTileX === endTileX && startTileY === endTileY) return [];
+
+    const mapWidth = layer.tilemap.width;
+    const mapHeight = layer.tilemap.height;
+
+    // Check target is in-bounds and walkable
+    if (endTileX < 0 || endTileY < 0 || endTileX >= mapWidth || endTileY >= mapHeight) return [];
+    const endTile = layer.getTileAt(endTileX, endTileY);
+    if (endTile && endTile.properties && endTile.properties.collides) return [];
+
+    const openSet: PathNode[] = [];
+    const closedSet = new Set<string>();
+
+    const heuristic = (ax: number, ay: number, bx: number, by: number) =>
+      Math.abs(ax - bx) + Math.abs(ay - by);
+
+    const startNode: PathNode = {
+      x: startTileX,
+      y: startTileY,
+      g: 0,
+      h: heuristic(startTileX, startTileY, endTileX, endTileY),
+      f: 0,
+      parent: null,
+    };
+    startNode.f = startNode.g + startNode.h;
+    openSet.push(startNode);
+
+    const directions = [
+      { dx: 0, dy: -1 },
+      { dx: 0, dy: 1 },
+      { dx: -1, dy: 0 },
+      { dx: 1, dy: 0 },
+    ];
+
+    const MAX_ITERATIONS = 2000;
+    let iterations = 0;
+
+    while (openSet.length > 0 && iterations < MAX_ITERATIONS) {
+      iterations++;
+
+      // Find node with lowest f score (tie-break on h)
+      let currentIdx = 0;
+      for (let i = 1; i < openSet.length; i++) {
+        if (
+          openSet[i].f < openSet[currentIdx].f ||
+          (openSet[i].f === openSet[currentIdx].f &&
+            openSet[i].h < openSet[currentIdx].h)
+        ) {
+          currentIdx = i;
+        }
+      }
+      const current = openSet[currentIdx];
+
+      // Reached the goal — reconstruct and simplify the path
+      if (current.x === endTileX && current.y === endTileY) {
+        const raw: Phaser.Math.Vector2[] = [];
+        let node: PathNode | null = current;
+        const halfW = layer.tilemap.tileWidth / 2;
+        const halfH = layer.tilemap.tileHeight / 2;
+
+        while (node) {
+          raw.unshift(
+            new Phaser.Math.Vector2(
+              layer.tileToWorldX(node.x)! + halfW,
+              layer.tileToWorldY(node.y)! + halfH
+            )
+          );
+          node = node.parent;
+        }
+        // Drop the first waypoint (player's current tile)
+        if (raw.length > 1) raw.shift();
+        return this.simplifyPath(raw);
+      }
+
+      openSet.splice(currentIdx, 1);
+      closedSet.add(`${current.x},${current.y}`);
+
+      for (const dir of directions) {
+        const nx = current.x + dir.dx;
+        const ny = current.y + dir.dy;
+
+        if (nx < 0 || ny < 0 || nx >= mapWidth || ny >= mapHeight) continue;
+        if (closedSet.has(`${nx},${ny}`)) continue;
+
+        const tile = layer.getTileAt(nx, ny);
+        if (tile && tile.properties && tile.properties.collides) continue;
+
+        const g = current.g + 1;
+        const h = heuristic(nx, ny, endTileX, endTileY);
+        const f = g + h;
+
+        const existingIdx = openSet.findIndex(
+          (n) => n.x === nx && n.y === ny
+        );
+        if (existingIdx !== -1) {
+          if (g < openSet[existingIdx].g) {
+            openSet[existingIdx].g = g;
+            openSet[existingIdx].f = f;
+            openSet[existingIdx].parent = current;
+          }
+          continue;
+        }
+
+        openSet.push({ x: nx, y: ny, g, h, f, parent: current });
+      }
+    }
+
+    return []; // No path found
+  }
+
+  /** Remove redundant collinear waypoints for smoother movement */
+  private simplifyPath(
+    path: Phaser.Math.Vector2[]
+  ): Phaser.Math.Vector2[] {
+    if (path.length <= 2) return path;
+    const simplified: Phaser.Math.Vector2[] = [path[0]];
+    for (let i = 1; i < path.length - 1; i++) {
+      const prev = simplified[simplified.length - 1];
+      const next = path[i + 1];
+      const sameX = prev.x === path[i].x && path[i].x === next.x;
+      const sameY = prev.y === path[i].y && path[i].y === next.y;
+      if (!sameX && !sameY) {
+        simplified.push(path[i]);
+      }
+    }
+    simplified.push(path[path.length - 1]);
+    return simplified;
   }
 
   private checkProximity() {

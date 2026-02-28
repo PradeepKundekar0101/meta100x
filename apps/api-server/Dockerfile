@@ -21,3 +21,6 @@ RUN pnpm --filter @repo/db exec prisma generate
 
 WORKDIR /app/apps/api-server
 RUN npm run build
+
+EXPOSE 8001
+CMD ["node", "dist/index.js"]
