@@ -1,11 +1,12 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import { WebSocketServer } from "ws";
 import { User } from "./services/User";
 import { createServer } from "http";
-import dotenv from "dotenv";
 import { RabbitMQLib } from "@repo/rabbitmq/rabbit";
 import { RedisClient } from "./lib/Redis";
 import { handleMessages } from "./services/handleIncoming";
-dotenv.config();
 
 const server = createServer();
 const wss = new WebSocketServer({ server });
