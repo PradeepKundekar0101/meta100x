@@ -14,7 +14,7 @@ env:
   ECR_REPOSITORY: metaplot/api-server
   ECS_CLUSTER: metaplot-api-server
   ECS_SERVICE: metaverse-service
-  ECS_TASK_DEFINITION: api-server
+  ECS_TASK_DEFINITION: metaverse
   CONTAINER_NAME: metaverse-api-server
 
 jobs:
