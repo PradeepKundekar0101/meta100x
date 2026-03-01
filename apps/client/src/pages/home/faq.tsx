@@ -2,20 +2,20 @@ import { useState } from "react";
 
 const faqs = [
     {
-        question: "Is it free to join?",
-        answer: "Yes! You can join and explore the metaverse for free. Some premium items may require purchase.",
+        question: "Do my friends need to download an app to join?",
+        answer: "Not at all! It is entirely web-based. They just need the Space ID to jump into the map directly from their browser.",
     },
     {
-        question: "Can I create my own room?",
-        answer: "Absolutely. You can create private rooms to hang out with friends or host meetings.",
+        question: "How exactly does the proximity video work?",
+        answer: "It mimics real life. When your avatar gets close to another player, a private communication bubble forms, automatically turning on your video and audio.",
     },
     {
-        question: "What devices are supported?",
-        answer: "Our platform is accessible via any modern web browser on desktop and mobile devices.",
+        question: "Can we present work to each other?",
+        answer: "Yes! Whenever you are in an active conversation with someone, you can easily share your screen to present code, slide decks, or designs.",
     },
     {
-        question: "Is voice chat available?",
-        answer: "Yes, we support spatial audio so you can hear people closer to you louder, just like real life.",
+        question: "Is there a text chat feature if I can't use my microphone?",
+        answer: "Absolutely. We have a built-in chat window so you can type messages to people nearby or broadcast to the whole room.",
     },
 ];
 

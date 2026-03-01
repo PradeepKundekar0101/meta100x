@@ -9,9 +9,9 @@ export default function ScrollDemo() {
                 titleComponent={
                     <>
                         <h1 className="text-4xl text-white dark:text-white">
-                            Explore the Metaverse <br />
+                            Your Virtual Space <br />
                             <span className="text-4xl md:text-[6rem] font-bold mt-1 leading-none">
-                                in 2D
+                                Comes Alive
                             </span>
                         </h1>
                     </>

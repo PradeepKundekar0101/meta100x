@@ -1,7 +1,7 @@
 import { TrackToggle, useLocalParticipant } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import { useRef } from "react";
-import { MonitorUp } from "lucide-react";
+
 
 export const TrackToggleComponent = () => {
   const controlBarRef = useRef<HTMLDivElement>(null);
@@ -21,8 +21,8 @@ export const TrackToggleComponent = () => {
       <TrackToggle
         source={Track.Source.ScreenShare}
         className={`p-2 rounded-full transition-all duration-300 ease-in-out hover:scale-105 ${isScreenSharing
-            ? "bg-[#6658fe] text-white hover:bg-[#5548e0]"
-            : "bg-gray-700 text-white hover:bg-gray-600"
+          ? "bg-[#6658fe] text-white hover:bg-[#5548e0]"
+          : "bg-gray-700 text-white hover:bg-gray-600"
           }`}
       >
         {/* <MonitorUp size={20} /> */}

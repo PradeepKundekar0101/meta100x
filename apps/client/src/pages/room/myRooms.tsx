@@ -153,7 +153,7 @@ const SpaceRow = ({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Space</DialogTitle>
+            <DialogTitle className="text-white">Edit Space</DialogTitle>
             <DialogDescription>
               Update the name of your space.
             </DialogDescription>
@@ -163,13 +163,14 @@ const SpaceRow = ({
               <Label htmlFor="editRoomName">Space Name</Label>
               <Input
                 id="editRoomName"
+                className="text-white bg-white/10 border border-white/20"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setOpen(false)} className="text-white bg-white/10 border border-white/20">
               Cancel
             </Button>
             <Button onClick={handleEdit} disabled={editMutation.isPending}>
@@ -211,11 +212,10 @@ const SpaceRow = ({
               {space.roomName}
             </h3>
             <span
-              className={`flex-shrink-0 w-2 h-2 rounded-full ${
-                space.isActive
-                  ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"
-                  : "bg-white/20"
-              }`}
+              className={`flex-shrink-0 w-2 h-2 rounded-full ${space.isActive
+                ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"
+                : "bg-white/20"
+                }`}
             />
           </div>
           <div className="flex items-center gap-2 mt-0.5">
@@ -379,7 +379,7 @@ const MyRooms = () => {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => navigate("/space/join")}
             className="text-white/50 hover:text-white hover:bg-white/[0.05] text-xs font-medium rounded-lg"
@@ -387,9 +387,10 @@ const MyRooms = () => {
             Join by code
           </Button>
           <Button
+            variant="default"
             size="sm"
             onClick={() => navigate("/createroom")}
-            className="bg-primaryBlue hover:bg-primaryBlue/90 text-white text-xs font-medium rounded-lg gap-1.5 shadow-lg shadow-primaryBlue/20"
+          // className="bg-primaryBlue hover:bg-primaryBlue/90 text-white text-xs font-medium rounded-lg gap-1.5 shadow-lg shadow-primaryBlue/20"
           >
             <Plus className="h-3.5 w-3.5" />
             New Space
