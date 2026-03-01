@@ -1,6 +1,7 @@
 import Hero from "./Hero";
 import Features from "./features";
 import HowItWorks from "./how-it-works";
+import UseCases from "./use-cases";
 import FAQ from "./faq";
 import CTA from "./cta";
 import Footer from "./footer";
@@ -12,6 +13,7 @@ const Home = () => {
       <ScrollDemo />
       <Features />
       <HowItWorks />
+      <UseCases />
       <FAQ />
       <CTA />
       <Footer />

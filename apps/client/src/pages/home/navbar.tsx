@@ -32,15 +32,15 @@ const Navbar = () => {
 
             {/* Middle Nav */}
             <nav className="hidden md:flex items-center gap-1 glass-panel p-1 rounded-full bg-white/5 backdrop-blur-md border border-white/10">
-                <Link to="/spaces" className="px-5 py-2 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors text-xs font-medium uppercase tracking-wider">
-                    Spaces
-                </Link>
-                <Link to="/assets" className="px-5 py-2 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors text-xs font-medium uppercase tracking-wider">
-                    Assets
-                </Link>
-                <Link to="/community" className="px-5 py-2 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors text-xs font-medium uppercase tracking-wider">
-                    Community
-                </Link>
+                <a href="/#resources" className="px-5 py-2 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors text-xs font-medium uppercase tracking-wider">
+                    Features
+                </a>
+                <a href="/#how-it-works" className="px-5 py-2 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors text-xs font-medium uppercase tracking-wider">
+                    How It Works
+                </a>
+                <a href="/#use-cases" className="px-5 py-2 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors text-xs font-medium uppercase tracking-wider">
+                    Use Cases
+                </a>
             </nav>
 
             {/* Right side - Auth / Profile */}
@@ -48,13 +48,12 @@ const Navbar = () => {
                 {!token ? (
                     <div className="flex items-center gap-2">
                         <Link to="/login" className="px-4 py-2 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-colors text-xs font-medium uppercase tracking-wider">
-                            Login
+                            Sign In
                         </Link>
-                        <Link to="/signup" className="group flex items-center gap-2 px-4 py-2 border border-white/10 rounded-full bg-black/20 backdrop-blur-sm hover:border-indigo-500/30 hover:bg-indigo-500/10 transition-all duration-300">
-                            <span className="text-xs font-medium text-white group-hover:text-indigo-400">
-                                Create Account
+                        <Link to="/signup" className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-500 transition-all duration-300 shadow-lg shadow-indigo-500/25">
+                            <span className="text-xs font-semibold text-white">
+                                Get Started
                             </span>
-
                         </Link>
                     </div>
                 ) : (
@@ -87,12 +86,7 @@ const Navbar = () => {
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator className="bg-white/10" />
-                                <DropdownMenuItem asChild className="hover:bg-white/5 focus:bg-white/5 cursor-pointer">
-                                    <Link to="/dashboard">Profile</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="hover:bg-white/5 focus:bg-white/5 cursor-pointer">Billing</DropdownMenuItem>
-                                <DropdownMenuItem className="hover:bg-white/5 focus:bg-white/5 cursor-pointer">Settings</DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-white/10" />
+
                                 <DropdownMenuItem
                                     className="text-red-400 focus:text-red-400 focus:bg-red-400/10 cursor-pointer"
                                     onClick={handleLogout}

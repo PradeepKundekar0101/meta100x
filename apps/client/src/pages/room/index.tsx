@@ -3,14 +3,7 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "@/hooks/use-axios";
 import axios from "axios";
-import {
-  Plus,
-  Minus,
-  MessageSquare,
-  Users,
-  Info,
-  PanelRightClose,
-} from "lucide-react";
+import { Plus, Minus } from "lucide-react";
 import Phaser from "phaser";
 import MainScene from "@/scenes/Scene";
 import Dock, { type ViewMode } from "./dock";
@@ -134,16 +127,22 @@ const Room: React.FC = () => {
 
   const initPhaser = useCallback(() => {
     if (gameRef.current) return;
+    const container = document.getElementById("game-content");
+    const w = container?.clientWidth ?? window.innerWidth;
+    const h = container?.clientHeight ?? window.innerHeight;
     try {
       const game = new Phaser.Game({
         type: Phaser.AUTO,
         title: roomCode,
         scene: [Preloader, MainScene],
         parent: "game-content",
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width: w,
+        height: h,
         pixelArt: true,
-        scale: { zoom: 1 },
+        scale: {
+          mode: Phaser.Scale.RESIZE,
+          autoCenter: Phaser.Scale.CENTER_BOTH,
+        },
         physics: {
           default: "arcade",
           arcade: {
@@ -183,9 +182,20 @@ const Room: React.FC = () => {
   if (isError) return <div>Error: {error.message}</div>;
 
   return (
-    <div className="flex relative h-screen bg-[#0c0c14]">
-      <div className="flex-grow relative overflow-hidden">
-        {/* Phaser game — hidden when in meeting mode */}
+    <div className="flex h-screen bg-[#0c0c14]">
+      {data?.data && (
+        <SpaceSidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          roomId={data.data.id}
+          roomName={data.data.roomName}
+          roomCode={roomCode || ""}
+          activeTab={sidebarTab}
+          onTabChange={openSidebarTo}
+        />
+      )}
+
+      <div className="flex-1 relative overflow-hidden">
         <div
           id="game-content"
           className="absolute inset-0 transition-opacity duration-300"
@@ -195,7 +205,6 @@ const Room: React.FC = () => {
           }}
         />
 
-        {/* Room name badge — top left */}
         {data?.data && (
           <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
             <div className="flex items-center gap-2 bg-[#0c0c14]/80 backdrop-blur-md px-3 py-2 rounded-xl ring-1 ring-white/[0.08]">
@@ -212,7 +221,6 @@ const Room: React.FC = () => {
           </div>
         )}
 
-        {/* Zoom controls — only in space mode */}
         {viewMode === "space" && (
           <div className="absolute bottom-20 left-4 z-20 flex flex-col items-center gap-1 bg-[#0c0c14]/80 backdrop-blur-md rounded-xl ring-1 ring-white/[0.08] p-1.5">
             <button
@@ -249,39 +257,6 @@ const Room: React.FC = () => {
             </span>
           </div>
         )}
-
-        {/* Sidebar toggle pills — top right */}
-        <div className="absolute top-4 right-4 z-50 flex items-center gap-1 bg-[#0c0c14]/80 backdrop-blur-md rounded-xl ring-1 ring-white/[0.08] p-1">
-          {[
-            { tab: "chat" as TabId, icon: MessageSquare, label: "Chat" },
-            { tab: "people" as TabId, icon: Users, label: "People" },
-            { tab: "details" as TabId, icon: Info, label: "Details" },
-          ].map(({ tab, icon: Icon, label }) => {
-            const isActive = sidebarOpen && sidebarTab === tab;
-            return (
-              <button
-                key={tab}
-                onClick={() => openSidebarTo(tab)}
-                title={label}
-                className={`p-2 rounded-lg transition-all duration-200 ${isActive
-                  ? "bg-[#6658fe]/15 text-[#a49bff]"
-                  : "text-white/35 hover:text-white/60 hover:bg-white/[0.04]"
-                  }`}
-              >
-                <Icon size={16} />
-              </button>
-            );
-          })}
-          {sidebarOpen && (
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-2 rounded-lg text-white/25 hover:text-white/50 hover:bg-white/[0.04] transition-all ml-0.5"
-              title="Close panel"
-            >
-              <PanelRightClose size={16} />
-            </button>
-          )}
-        </div>
 
         <LiveKitRoom
           audio={false}
@@ -322,19 +297,6 @@ const Room: React.FC = () => {
           </div>
         </LiveKitRoom>
       </div>
-
-      {/* Sidebar */}
-      {data?.data && (
-        <SpaceSidebar
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          roomId={data.data.id}
-          roomName={data.data.roomName}
-          roomCode={roomCode || ""}
-          activeTab={sidebarTab}
-          onTabChange={setSidebarTab}
-        />
-      )}
     </div>
   );
 };

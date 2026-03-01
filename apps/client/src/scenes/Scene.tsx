@@ -48,6 +48,8 @@ export default class TestScene extends Scene {
   private lastClickTime: number = 0;
   private lastClickWorldPos: Phaser.Math.Vector2 | null = null;
   private hoverTimer: ReturnType<typeof setTimeout> | null = null;
+  private mapPixelWidth = 0;
+  private mapPixelHeight = 0;
 
   private avatarId = "pajji";
   private roomId = "default";
@@ -272,6 +274,8 @@ export default class TestScene extends Scene {
 
     const mapWidth = map.widthInPixels;
     const mapHeight = map.heightInPixels;
+    this.mapPixelWidth = mapWidth;
+    this.mapPixelHeight = mapHeight;
     this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
 
     const cam = this.cameras.main;
@@ -282,6 +286,20 @@ export default class TestScene extends Scene {
     window.dispatchEvent(
       new CustomEvent("ph-zoom-sync", { detail: { zoom: fitZoom } })
     );
+
+    this.scale.on("resize", (gameSize: Phaser.Structs.Size) => {
+      this.cameras.resize(gameSize.width, gameSize.height);
+      const newMinX = gameSize.width / this.mapPixelWidth;
+      const newMinY = gameSize.height / this.mapPixelHeight;
+      const newFit = Math.max(newMinX, newMinY, 1);
+      const currentZoom = this.cameras.main.zoom;
+      if (currentZoom < newFit) {
+        this.cameras.main.setZoom(newFit);
+      }
+      window.dispatchEvent(
+        new CustomEvent("ph-zoom-sync", { detail: { zoom: Math.max(currentZoom, newFit) } })
+      );
+    });
 
     // "Move here" hover indicator for walkable ground
     this.moveHereText = this.add

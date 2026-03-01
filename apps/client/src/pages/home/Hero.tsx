@@ -5,10 +5,12 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import gsap from 'gsap';
 import ScrollDemo from './scroll';
+import { ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
+  const navigate = useNavigate();
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -41,6 +43,7 @@ const Hero = () => {
     renderer.toneMappingExposure = 1.0;
 
     const mainGroup = new THREE.Group();
+    mainGroup.position.x = 3;
     scene.add(mainGroup);
 
     const geometryCore = new THREE.IcosahedronGeometry(2, 10);
@@ -316,12 +319,17 @@ const Hero = () => {
             <div className="space-y-0">
               <div className="overflow-hidden">
                 <h1 className="hero-reveal text-5xl md:text-7xl lg:text-8xl font-medium tracking-tight leading-[0.95] text-white glitch-target mix-blend-difference">
-                  Create,
+                  Step Into a More
                 </h1>
               </div>
               <div className="overflow-hidden">
-                <h1 className="hero-reveal text-5xl md:text-7xl lg:text-8xl font-serif italic font-light tracking-tight leading-[0.95] text-indigo-200/90 glitch-target">
-                  Worlds.
+                <h1 className="hero-reveal text-5xl md:text-7xl lg:text-8xl font-medium tracking-tight leading-[0.95] text-white glitch-target mix-blend-difference">
+                  Natural
+                </h1>
+              </div>
+              <div className="overflow-hidden">
+                <h1 className="hero-reveal text-5xl md:text-7xl lg:text-8xl font-light tracking-tight leading-[0.95] text-indigo-200/90 glitch-target">
+                  Virtual Workspace.
                 </h1>
               </div>
             </div>
@@ -329,62 +337,28 @@ const Hero = () => {
             {/* Description */}
             <div className="overflow-hidden max-w-xl">
               <p className="hero-reveal text-sm md:text-lg text-zinc-400 leading-relaxed font-light">
-                The ultimate real-time 3D development platform. Forge, operate,
-                and monetize interactive, real-time 3D experiences for any
-                platform.
-                <span className="text-indigo-400/70 text-xs block mt-2 font-mono uppercase tracking-widest opacity-80">
-                  &gt; Start your creative journey
-                </span>
+                Create custom 2D spaces, choose your avatar, and collaborate organically. Walk up to friends or teammates to instantly start talking with proximity-based video, voice, and screen sharing.
               </p>
             </div>
 
             {/* Buttons */}
             <div className="overflow-hidden pt-6">
               <div className="hero-reveal flex flex-wrap pointer-events-auto pt-4 pr-1 pb-4 pl-1 gap-x-4 gap-y-4">
-                {/* Animated Install Button */}
                 <div className="btn-wrapper">
-                  <button className="btn" type="button" aria-label="Deploy Nexus">
+                  <button className="btn" onClick={() => navigate("/spaces")} type="button" aria-label="Create Your Free Space">
                     <div className="txt-wrapper">
                       <div className="txt-1">
-                        <span className="btn-letter">D</span>
-                        <span className="btn-letter">o</span>
-                        <span className="btn-letter">w</span>
-                        <span className="btn-letter">n</span>
-                        <span className="btn-letter">l</span>
-                        <span className="btn-letter">o</span>
-                        <span className="btn-letter">a</span>
-                        <span className="btn-letter">d</span>
-                        <span className="btn-letter" style={{ width: '4px' }}></span>
-                        <span className="btn-letter">A</span>
-                        <span className="btn-letter">e</span>
-                        <span className="btn-letter">t</span>
-                        <span className="btn-letter">h</span>
-                        <span className="btn-letter">e</span>
-                        <span className="btn-letter">r</span>
+                        {"Create Your Free Space".split("").map((char, i) => (
+                          <span key={i} className="btn-letter" style={char === " " ? { width: '4px' } : undefined}>
+                            {char !== " " ? char : ""}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                    <svg className="btn-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="7 10 12 15 17 10"></polyline>
-                      <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
-                {/* Secondary Button */}
-                <button className="group inline-flex overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_25px_rgba(99,102,241,0.2)] h-[54px] rounded-full pt-[1px] pr-[1px] pb-[1px] pl-[1px] relative items-center justify-center">
-                  <span className="animate-[spin_4s_linear_infinite] transition-opacity duration-300 group-hover:opacity-100 opacity-0 absolute top-[-150%] left-[-150%] w-[400%] h-[400%] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_75%,#6366f1_100%)]"></span>
-                  <span className="absolute inset-0 rounded-full bg-white/10 transition-opacity duration-300 group-hover:opacity-0"></span>
-                  <span className="flex items-center justify-center gap-2 transition-colors duration-300 group-hover:text-indigo-200 text-sm font-medium text-white tracking-tight bg-zinc-950 w-full h-full rounded-full pr-8 pl-8 relative shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                    <span className="relative z-10">View Documentation</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 text-zinc-400 group-hover:text-indigo-200 transition-colors">
-                      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-                      <polyline points="14 2 14 8 20 8"></polyline>
-                      <line x1="16" y1="13" x2="8" y2="13"></line>
-                      <line x1="16" y1="17" x2="8" y2="17"></line>
-                      <line x1="10" y1="9" x2="8" y2="9"></line>
-                    </svg>
-                  </span>
-                </button>
+
               </div>
             </div>
           </div>
@@ -393,7 +367,6 @@ const Hero = () => {
 
       </div>
 
-      {/* Bottom Fade */}
       <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent z-[5] pointer-events-none"></div>
       <ScrollDemo />
     </section>

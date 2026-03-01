@@ -4,15 +4,14 @@ import { CardSpotlight } from "@/components/ui/card-spotlight";
 import ScrollStack, { ScrollStackItem } from '@/components/ScrollStack';
 
 const HowItWorks = () => {
-    return <section className="py-20 bg-[#0A0A0B]">
+    return <section className="py-20 bg-[#0A0A0B]" id="how-it-works">
         <div className="container mx-auto px-4">
             <div className="text-center mb-16">
                 <h2 className="text-3xl text-white mb-4">
                     How It Works
                 </h2>
                 <p className="text-white/70 max-w-2xl mx-auto">
-                    Getting started is easy. Jump into the metaverse in just three
-                    simple steps.
+                    Get up and running in three simple steps.
                 </p>
             </div>
 
@@ -21,23 +20,23 @@ const HowItWorks = () => {
                     <ScrollStackItem itemClassName="!p-0 !bg-transparent !shadow-none">
                         <Step
                             number="01"
-                            title="Create Your Avatar"
-                            description="Customize your digital identity with unique outfits and accessories."
+                            title="Build Your World"
+                            description="Sign up, give your space a name, and select the perfect environment map for your team."
                             defaultActive
                         />
                     </ScrollStackItem>
                     <ScrollStackItem itemClassName="!p-0 !bg-transparent !shadow-none">
                         <Step
                             number="02"
-                            title="Join a Space"
-                            description="Enter public squares or create private rooms for you and your friends."
+                            title="Choose Your Character"
+                            description="Browse our diverse character library and pick an avatar to represent you in the digital world."
                         />
                     </ScrollStackItem>
                     <ScrollStackItem itemClassName="!p-0 !bg-transparent !shadow-none">
                         <Step
                             number="03"
-                            title="Start Exploring"
-                            description="Walk around, chat, play games, and attend virtual events."
+                            title="Invite and Connect"
+                            description="Share your unique, secure Invite Code (Space ID). Once your friends join, simply walk up to them to trigger your camera and mic!"
                         />
                     </ScrollStackItem>
                 </ScrollStack>

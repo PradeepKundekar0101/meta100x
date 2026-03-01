@@ -15,18 +15,17 @@ const CTA = () => {
                             Get Started
                         </div>
                         <h2 className="text-4xl md:text-5xl lg:text-6xl text-white tracking-tight leading-[1.1]">
-                            Ready to Dive In?
+                            Ready to Build Your Space?
                         </h2>
                         <p className="mt-5 text-base md:text-lg text-white/60 leading-relaxed">
-                            Join thousands of users already exploring the future of social
-                            interaction.
+                            Create your free virtual workspace and invite your team, classmates, or friends in minutes.
                         </p>
                         <div className="mt-8 flex flex-wrap gap-3">
                             <a
-                                href="/createroom"
+                                href="/space/create"
                                 className="inline-flex items-center gap-2 rounded-full bg-white text-neutral-900 px-6 py-3 text-sm font-semibold hover:bg-neutral-100 transition-colors"
                             >
-                                Get Started Now
+                                Create Your Free Space
                                 <ArrowRight className="w-4 h-4" />
                             </a>
                             <a
